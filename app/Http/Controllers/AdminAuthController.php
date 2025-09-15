@@ -187,3 +187,4 @@ class AdminAuthController extends Controller
         ]);
     }
 }
+

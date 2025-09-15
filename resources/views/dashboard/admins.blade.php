@@ -1,27 +1,27 @@
 @extends('dashboard.layouts')
 
-@section('title', 'الأدمنز')
-@section('page-title', 'إدارة الأدمنز')
+@section('title', 'إدارة المدراء')
+@section('page-title', 'قائمة المدراء')
 
 @section('content')
-<div class="bg-white shadow rounded-xl p-6">
-    <table class="w-full text-sm text-left border">
-        <thead class="bg-gray-100 text-gray-600 uppercase">
-            <tr>
-                <th class="px-4 py-2">ID</th>
-                <th class="px-4 py-2">الاسم</th>
-                <th class="px-4 py-2">الصلاحيات</th>
-                <th class="px-4 py-2">إجراءات</th>
+<div class="bg-white shadow rounded-lg p-4">
+    <table class="w-full border">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="p-2 border">#</th>
+                <th class="p-2 border">الاسم</th>
+                <th class="p-2 border">البريد الإلكتروني</th>
+                <th class="p-2 border">إجراءات</th>
             </tr>
         </thead>
         <tbody>
-            <tr class="border-b hover:bg-gray-50">
-                <td class="px-4 py-2">1</td>
-                <td class="px-4 py-2">أحمد</td>
-                <td class="px-4 py-2">مدير النظام</td>
-                <td class="px-4 py-2">
-                    <button class="text-indigo-600 hover:underline">تعديل</button> |
-                    <button class="text-red-600 hover:underline">حذف</button>
+            <tr>
+                <td class="p-2 border">1</td>
+                <td class="p-2 border">مدير النظام</td>
+                <td class="p-2 border">admin@example.com</td>
+                <td class="p-2 border">
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded">تعديل</button>
+                    <button class="bg-red-500 text-white px-3 py-1 rounded">حذف</button>
                 </td>
             </tr>
         </tbody>

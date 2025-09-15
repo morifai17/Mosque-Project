@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthTeacherController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductDashboardController;
@@ -17,8 +18,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
-Route::get('/products/getProducts', [ProductController::class, 'getProducts']);
 
 
 
@@ -72,3 +71,4 @@ Route::prefix('dashboard/products')->group(function () {
     Route::patch('/{id}/quantity', [ProductDashboardController::class, 'updateQuantity']);
     Route::get('/search/{query}', [ProductDashboardController::class, 'search']);
 });
+

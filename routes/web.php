@@ -107,6 +107,56 @@ Route::get('/settings', function () {
 })->name('settings');
 
 // Route احتياطي لكل المسارات غير المعرفة - توجيه إلى Login
-Route::fallback(function () {
-    return redirect()->route('login');
+// Route::fallback(function () {
+//     return redirect()->route('login');
+
+
+
+
+Route::prefix('dashboard')->group(function () {
+
+    Route::get('/admins', function () {
+        return view('dashboard.admins');
+    })->name('dashboard.admins');
+
+    Route::get('/coupons', function () {
+        return view('dashboard.coupons');
+    })->name('dashboard.coupons');
+
+    // Route::get('/home-content', function () {
+    //     return view('dashboard.home-content');
+    // })->name('dashboard.home');
+
+    Route::get('/layouts', function () {
+        return view('dashboard.layouts');
+    })->name('dashboard.layouts');
+
+    Route::get('/offers', function () {
+        return view('dashboard.offers');
+    })->name('dashboard.offers');
+
+    Route::get('/order', function () {
+        return view('dashboard.order');
+    })->name('dashboard.order');
+
+    Route::get('/products', function () {
+        return view('dashboard.products');
+    })->name('dashboard.products');
+
+    Route::get('/quran-cycle', function () {
+        return view('dashboard.QuranCycle');
+    })->name('dashboard.quran');
+
+    Route::get('/students-content', function () {
+        return view('dashboard.students-content');
+    })->name('dashboard.students');
+
+    Route::get('/users', function () {
+        return view('dashboard.users');
+    })->name('dashboard.users');
 });
+
+
+
+
+
