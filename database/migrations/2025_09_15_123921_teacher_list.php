@@ -11,12 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quran_circles', function (Blueprint $table) {
-              $table->id();
-              $table->string("title");
-        $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-        $table->timestamps();
+        Schema::create('teacher_list', function (Blueprint $table) {
+            $table->id();
+            $table->string('frist_name');
+            $table->string('last_name')->unique();
+            $table->string('code')->unique();
+            $table->timestamps();
+            $table->softDeletes(); // إضافة soft deletes
+
         });
+
+
     }
 
     /**
@@ -24,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('quran_circles');
+        //
     }
 };
