@@ -10,92 +10,80 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminAuthController extends Controller
 {
+
     public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string',
-            'password' => 'required|string|min:6',
-            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+{
+    $validated = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'phone_number' => 'required|numeric',
+        'password' => 'required|min:6',
+        'avatar' => 'nullable|image|mimes:jpg,jpeg,png',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+    $admin = new Admin();
+    $admin->first_name = $validated['first_name'];
+    $admin->last_name = $validated['last_name'];
+    $admin->admin_name = $validated['first_name'] . ' ' . $validated['last_name'];
+    $admin->phone_number = $validated['phone_number'];
+    $admin->password = Hash::make($validated['password']);
+    $admin->Super_Admin = false; // Explicitly set to false as required
 
-        $admin = new Admin();
-        $admin->first_name = $request->first_name;
-        $admin->last_name = $request->last_name;
-        $admin->admin_name = $request->first_name . ' ' . $request->last_name;
-        $admin->phone_number = $request->phone_number;
-        $admin->password = Hash::make($request->password);
-
-        if ($request->hasFile('avatar')) {
+    if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar');
             $path = $avatar->store('avatars', 'public');
             $admin->avatar = $path;
         }
+    $admin->save();
 
-        $admin->save();
+    $token = $admin->createToken('admin-token')->plainTextToken;
 
-        $token = $admin->createToken('admin-token')->plainTextToken;
+    // Remove password from response
+    unset($admin->password);
 
-        // إرجاع بيانات المشرف بدون كلمة المرور
-        unset($admin->password);
+    return response()->json([
+        'success' => true,
+        'admin' => $admin,
+        'token' => $token,
+    ], 201);
+}
+    
 
+   public function login(Request $request)
+{
+    $request->validate([
+        'phone_number' => 'required|numeric|exists:admins',
+        'password' => 'nullable|required_without:fingerprint',
+    ]);
+
+    // First, find the admin by phone number
+    $admin = Admin::where('phone_number', $request->phone_number)->first();
+
+    if ($admin) {
+        // Check password if provided
+        if ($request->filled('password')) {
+            if (!Hash::check($request->password, $admin->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wrong password',
+                ], 200);
+            }
+        }
+        
+        $admin->avatar = asset($admin->avatar);
+        
         return response()->json([
             'success' => true,
-            'admin' => $admin,
-            'token' => $token,
-        ], 201);
-    }
-
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'admin_name' => 'required|string|exists:admins,admin_name',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $admin = Admin::where('admin_name', $request->admin_name)->first();
-
-        // التحقق من كلمة المرور
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'اسم المستخدم أو كلمة المرور غير صحيحة'
-            ], 401);
-        }
-
-        // معالجة صورة Avatar إذا كانت موجودة
-        if ($admin->avatar) {
-            $admin->avatar = Storage::disk('public')->exists($admin->avatar)
-                ? asset(Storage::url($admin->avatar))
-                : null;
-        }
-
-        $token = $admin->createToken('admin-token')->plainTextToken;
-
-        // إرجاع بيانات المشرف بدون كلمة المرور
-        unset($admin->password);
-
-        return response()->json([
-            'success' => true,
-            'token' => $token,
-            'admin' => $admin,
+            'token' => $admin->createToken('admin Token')->plainTextToken,
+            'user' => $admin,
         ]);
     }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Wrong information',
+    ], 200);
+}
 
     public function logout(Request $request)
     {
@@ -103,15 +91,14 @@ class AdminAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تسجيل الخروج بنجاح'
+            'message' => 'logged out succefully'
         ]);
     }
 
-    public function getProfile(Request $request)
+    public function profile(Request $request)
     {
         $admin = $request->user();
 
-        // معالجة صورة Avatar إذا كانت موجودة
         if ($admin->avatar) {
             $admin->avatar = Storage::disk('public')->exists($admin->avatar)
                 ? asset(Storage::url($admin->avatar))
@@ -127,24 +114,18 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    // دالة للتحديث (إذا needed)
     public function updateProfile(Request $request)
     {
         $admin = $request->user();
 
-        $validator = Validator::make($request->all(), [
+    $validated = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+       
 
         // تحديث الحقول
         if ($request->has('first_name')) {
@@ -182,7 +163,7 @@ class AdminAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تحديث الملف الشخصي بنجاح',
+            'message' => 'profile updated successfully',
             'admin' => $admin,
         ]);
     }

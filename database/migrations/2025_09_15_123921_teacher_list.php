@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('teacher_list', function (Blueprint $table) {
             $table->id();
-            $table->string('frist_name');
-            $table->string('last_name')->unique();
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->unsignedInteger('phone_number');
             $table->string('code')->unique();
             $table->timestamps();
             $table->softDeletes(); // إضافة soft deletes
-
         });
 
 

@@ -6,55 +6,81 @@ use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\TeacherList;
+
 use Illuminate\Support\Facades\Validator;
 
-class AuthTeacherController extends Controller
+class TeacherAuthController extends Controller  
 {
-    public function register(Request $request)
-    {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string',
-            'password' => 'required|string|min:6',
-            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
 
-        $teacher = new Teacher();
-        $teacher->first_name = $request->first_name;
-        $teacher->last_name = $request->last_name;
-        $teacher->teacher_name = $request->first_name . ' ' . $request->last_name;
-        $teacher->phone_number = $request->phone_number;
-        $teacher->password = Hash::make($request->password);
+public function register(Request $request)
+{
+    $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'phone_number' => 'required',
+        'password' => 'required|min:6',
+        'code' => 'required|string', 
+        'avatar' => 'nullable|image|mimes:jpg,jpeg,png',
+    ]);
 
-        if ($request->hasFile('avatar')) {
-            $avatar = $request->file('avatar');
-            $path = $avatar->store('teacher_avatars', 'public');
-            $teacher->avatar = $path;
-        }
+    // Check if teacher exists in teacher_list with the same phone number and code
+    $teacherList = TeacherList::where('phone_number', $request->phone_number)
+        ->where('code', $request->code)
+        ->first();
 
-        $teacher->save();
-
-        $token = $teacher->createToken('teacher-token')->plainTextToken;
-
-        // إرجاع البيانات بدون كلمة المرور
-        unset($teacher->password);
-
+    if (!$teacherList) {
         return response()->json([
-            'success' => true,
-            'teacher' => $teacher,
-            'token' => $token,
-        ], 201);
+            'success' => false,
+            'message' => 'Invalid code or phone number. Please check your credentials.'
+        ], 422);
     }
+
+    // Check if teacher is already registered
+    $existingTeacher = Teacher::where('phone_number', $request->phone_number)->first();
+    if ($existingTeacher) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Teacher already registered with this phone number.'
+        ], 422);
+    }
+
+    $teacher = new Teacher();
+    $teacher->first_name = $request->first_name;
+    $teacher->last_name = $request->last_name;
+    $teacher->teacher_name = $request->first_name . ' ' . $request->last_name;
+    $teacher->phone_number = $request->phone_number;
+    $teacher->password = Hash::make($request->password);
+
+    if ($request->hasFile('avatar')) {
+        $avatar = $request->file('avatar');
+        $path = $avatar->store('teacher_avatars', 'public');
+        $teacher->avatar = $path;
+    }
+
+    $teacher->save();
+
+    $token = $teacher->createToken('teacher-token')->plainTextToken;
+
+    // Remove password from response
+    unset($teacher->password);
+
+    return response()->json([
+        'success' => true,
+        'teacher' => $teacher,
+        'token' => $token,
+    ], 201);
+}
+
 
     public function login(Request $request)
     {
         $request->validate([
-            'teacher_name' => 'required|string|exists:teachers,teacher_name',
-            'password' => 'required|string',
+            'phone_number' => 'required',
+            'password' => 'required',
         ]);
 
-        $teacher = Teacher::where('teacher_name', $request->teacher_name)->first();
+        $teacher = Teacher::where('phone_number', $request->phone_number)->first();
 
         // التحقق من كلمة المرور
         if (!$teacher || !Hash::check($request->password, $teacher->password)) {
@@ -93,26 +119,35 @@ class AuthTeacherController extends Controller
         ]);
     }
 
-    public function getProfile(Request $request)
-    {
-        $teacher = $request->user();
 
-        // معالجة صورة Avatar إذا كانت موجودة
-        if ($teacher->avatar) {
-            $teacher->avatar = Storage::disk('public')->exists($teacher->avatar)
-                ? asset(Storage::url($teacher->avatar))
-                : null;
-        }
 
-        // إرجاع البيانات بدون كلمة المرور
-        unset($teacher->password);
+  public function profile(Request $request)
+{
+    $teacher = $request->user();
 
+    // Check if teacher exists
+    if (!$teacher) {
         return response()->json([
-            'success' => true,
-            'teacher' => $teacher,
-        ]);
+            'success' => false,
+            'message' => 'المعلم غير موجود أو غير مسجل الدخول'
+        ], 401);
     }
 
+    // معالجة صورة Avatar إذا كانت موجودة
+    if ($teacher->avatar) {
+        $teacher->avatar = Storage::disk('public')->exists($teacher->avatar)
+            ? asset(Storage::url($teacher->avatar))
+            : null;
+    }
+
+    // إرجاع البيانات بدون كلمة المرور
+    unset($teacher->password);
+
+    return response()->json([
+        'success' => true,
+        'teacher' => $teacher,
+    ]);
+}
     public function updateProfile(Request $request)
     {
         $teacher = $request->user();

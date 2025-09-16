@@ -21,11 +21,7 @@ return new class extends Migration
         $table->string('avatar')->nullable();
         $table->boolean("Super_Admin")->default(false);
         $table->timestamps();
-        $table->softDeletes(); // إضافة soft deletes
-
-        // indexes
-        $table->index('admin_name');
-        $table->index('phone_number');
+        $table->softDeletes();
     });
 }
     /**
