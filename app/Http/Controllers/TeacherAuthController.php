@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TeacherList;
+use Illuminate\Support\Facades\Auth;
 
-use Illuminate\Support\Facades\Validator;
 
 class TeacherAuthController extends Controller  
 {
@@ -123,7 +123,7 @@ public function register(Request $request)
 
   public function profile(Request $request)
 {
-    $teacher = $request->user();
+    $teacher = Auth::guard('teacher')->user(); // ✅ مو $request->user()
 
     // Check if teacher exists
     if (!$teacher) {
@@ -156,6 +156,7 @@ public function register(Request $request)
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string',
+            'password' => 'sometimes',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -168,6 +169,9 @@ public function register(Request $request)
             $teacher->last_name = $request->last_name;
         }
 
+        if ($request->has('password')) {
+            $teacher->password = $request->password;
+        }
         if ($request->has('phone_number')) {
             $teacher->phone_number = $request->phone_number;
         }
@@ -200,47 +204,46 @@ public function register(Request $request)
         ]);
     }
 
-    public function getAllTeachers(Request $request)
-    {
-        $teachers = Teacher::all()->map(function ($teacher) {
-            if ($teacher->avatar) {
-                $teacher->avatar = Storage::disk('public')->exists($teacher->avatar)
-                    ? asset(Storage::url($teacher->avatar))
-                    : null;
-            }
-            unset($teacher->password);
-            return $teacher;
-        });
-
-        return response()->json([
-            'success' => true,
-            'teachers' => $teachers,
-        ]);
-    }
-
-    public function getTeacherById($id)
-    {
-        $teacher = Teacher::find($id);
+ public function getTeachers(Request $request) 
+{
+    // ✅ إذا بعت id → رجّع معلّم واحد فقط
+    if ($request->has('id')) {
+        $teacher = TeacherList::find($request->id);
 
         if (!$teacher) {
-            return response()->json([
-                'success' => false,
-                'message' => 'المعلم غير موجود'
-            ], 404);
+            return response()->json(['error' => 'Teacher not found'], 404);
         }
-
-        // معالجة صورة Avatar إذا كانت موجودة
-        if ($teacher->avatar) {
-            $teacher->avatar = Storage::disk('public')->exists($teacher->avatar)
-                ? asset(Storage::url($teacher->avatar))
-                : null;
-        }
-
-        unset($teacher->password);
 
         return response()->json([
             'success' => true,
-            'teacher' => $teacher,
+            'teacher' => $teacher
         ]);
     }
+
+    // ✅ إذا ما في id → رجّع قائمة المعلمين مع البحث
+    $query = TeacherList::query();
+
+    if ($request->filled('search')) {
+        $searchTerm = $request->search;
+        $query->where(function ($q) use ($searchTerm) {
+            $q->where('first_name', 'LIKE', "%{$searchTerm}%")
+              ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
+              ->orWhere('phone_number', 'LIKE', "%{$searchTerm}%"); 
+        });
+    }
+
+    $teachers = $query->get();
+
+    if ($teachers->isEmpty()) {
+        return response()->json(['error' => 'No teachers found'], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'teachers' => $teachers
+    ]);
+}
+
+
+
 }

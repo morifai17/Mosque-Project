@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('quran_circles', function (Blueprint $table) {
               $table->id();
               $table->string("title");
-        $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-        $table->timestamps();
+              $table->foreignId('teacher_id')->constrained('teacher_list')->onDelete('cascade');
+              $table->timestamps();
         });
     }
 

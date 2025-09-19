@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('quran_circles_students', function (Blueprint $table) {
              $table->id();
-        $table->foreignId('class_id')->constrained('quran_circles')->onDelete('cascade'); 
+        $table->foreignId('quran_circle')->constrained('quran_circles')->onDelete('cascade'); 
         $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade'); 
         $table->string('student_name');
         $table->string('phone_number');

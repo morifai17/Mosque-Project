@@ -16,7 +16,7 @@ class AdminAuthController extends Controller
     $validated = $request->validate([
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
-        'phone_number' => 'required|numeric',
+        'phone_number' => 'required|numeric   ',
         'password' => 'required|min:6',
         'avatar' => 'nullable|image|mimes:jpg,jpeg,png',
     ]);

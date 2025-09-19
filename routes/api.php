@@ -3,8 +3,10 @@
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\TeacherAuthController;
+use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductDashboardController;
+use App\Http\Controllers\TeacherDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +36,7 @@ Route::prefix('admin')->group(function () {
 // ----------------- AdminDashboard -----------------
 
 Route::prefix('admin')->group(function () {
-    Route::post('/teachers', [AdminDashboardController::class, 'addTeacher']);
+    Route::post('/addTeacher', [AdminDashboardController::class, 'addTeacher']);
 });
 
 
@@ -43,15 +45,34 @@ Route::prefix('admin')->group(function () {
 Route::prefix('teacher')->group(function () {
     Route::post('/register', [TeacherAuthController::class, 'register']);
     Route::get('/login', [TeacherAuthController::class, 'login']);
-        Route::get('/profile', [TeacherAuthController::class, 'profile']);
+    Route::get('/teachers', [TeacherAuthController::class, 'getTeachers']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:teacher')->group(function () {
+        Route::get('/profile', [TeacherAuthController::class, 'profile']);
+        Route::post('/updateProfile', [TeacherAuthController::class, 'updateProfile']);
         Route::get('/logout', [TeacherAuthController::class, 'logout']);
-        Route::put('/profile', [TeacherAuthController::class, 'updateProfile']);
-        Route::get('/all', [TeacherAuthController::class, 'getAllTeachers']);
-        Route::get('/{id}', [TeacherAuthController::class, 'getTeacherById']);
+        
     });
 });
+
+
+//---------------------Teacher Dashboard-----------------------------
+Route::prefix('teacher')->group(function () {
+    Route::post('/addStudent', [TeacherDashboardController::class, 'addStudent']);
+});
+
+
+//----------------------Student Auth ---------------------------------
+Route::prefix('student')->group(function () {
+    Route::post('/register', [StudentAuthController::class, 'register']);
+    Route::get('/login', [StudentAuthController::class, 'login']);
+    Route::middleware('auth:sanctum')->get('/logout', [StudentAuthController::class, 'logout']);
+    Route::middleware('auth:sanctum')->get('/profile', [StudentAuthController::class, 'profile']);
+    Route::middleware('auth:sanctum')->post('/updatProfile', [StudentAuthController::class, 'updateProfile']);
+
+});
+
+
 
 // ----------------- مسارات Dashboard للـ Products -----------------
 Route::prefix('dashboard/products')->group(function () {

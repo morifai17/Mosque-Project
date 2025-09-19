@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
+
 
 
 class Student extends Authenticatable
@@ -26,6 +28,23 @@ class Student extends Authenticatable
     public function carts()
     {
         return $this->hasMany(Cart::class);
+    }
+
+
+      public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * Get the updated_at attribute in a specific format.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getUpdatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
 
     // Optional: get all products in the cart directly

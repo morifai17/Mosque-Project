@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthStudentController;
+use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\TeacherAuthController;
 
 // الصفحة الرئيسية - توجيه إلى واجهة الدخول
@@ -15,19 +15,19 @@ Route::get('/login', function () {
 })->name('login');
 
 // تسجيل الدخول للطلاب
-Route::post('/student/login', [AuthStudentController::class, 'login'])->name('student.login');
+Route::post('/student/login', [StudentAuthController::class, 'login'])->name('student.login');
 
 // تسجيل الدخول للمعلمين
 Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.login');
 
 // تسجيل الطلاب الجدد
-Route::post('/student/register', [AuthStudentController::class, 'register'])->name('student.register');
+Route::post('/student/register', [StudentAuthController::class, 'register'])->name('student.register');
 
 // تسجيل المعلمين الجدد
 Route::post('/teacher/register', [TeacherAuthController::class, 'register'])->name('teacher.register');
 
 // جلب قائمة المعلمين (للعرض في dropdown عند تسجيل طالب جديد)
-Route::get('/api/teachers', [TeacherAuthController::class, 'getAllTeachers'])->name('api.teachers');
+Route::get('/api/teachers', [TeacherAuthController::class, 'getTeachers'])->name('api.teachers');
 
 // لوحة تحكم الطالب (محمية بال middleware)
 Route::middleware(['student'])->group(function () {
@@ -35,9 +35,9 @@ Route::middleware(['student'])->group(function () {
         return view('student.dashboard');
     })->name('student.dashboard');
 
-    Route::get('/student/profile', [AuthStudentController::class, 'profile'])->name('student.profile');
-    Route::put('/student/profile', [AuthStudentController::class, 'updateProfile'])->name('student.profile.update');
-    Route::post('/student/logout', [AuthStudentController::class, 'logout'])->name('student.logout');
+    Route::get('/student/profile', [StudentAuthController::class, 'profile'])->name('student.profile');
+    Route::post('/student/updateProfile', [StudentAuthController::class, 'updateProfile'])->name('student.profile.update');
+    Route::post('/student/logout', [StudentAuthController::class, 'logout'])->name('student.logout');
 });
 
 // لوحة تحكم المعلم (محمية بال middleware)
@@ -48,28 +48,28 @@ Route::middleware(['teacher'])->group(function () {
 
     Route::get('/teacher/profile', [TeacherAuthController::class, 'profile'])->name('teacher.profile');
     Route::put('/teacher/profile', [TeacherAuthController::class, 'updateProfile'])->name('teacher.profile.update');
-    Route::get('/teacher/students', [AuthStudentController::class, 'getStudentsByTeacher'])->name('teacher.students');
+    Route::get('/teacher/students', [StudentAuthController::class, 'getStudentsByTeacher'])->name('teacher.students');
     Route::post('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
 });
 
 // Routes للـ API (للاستخدام من قبل الواجهة)
 Route::prefix('api')->group(function () {
-    Route::post('/student/login', [AuthStudentController::class, 'login']);
+    Route::post('/student/login', [StudentAuthController::class, 'login']);
     Route::get('/teacher/login', [TeacherAuthController::class, 'login']);
-    Route::post('/student/register', [AuthStudentController::class, 'register']);
+    Route::post('/student/register', [StudentAuthController::class, 'register']);
     Route::post('/teacher/register', [TeacherAuthController::class, 'register']);
-    Route::get('/teachers', [TeacherAuthController::class, 'getAllTeachers']);
+    Route::get('/teachers', [TeacherAuthController::class, 'getTeachers']);
 
     // Routes محمية بـ API middleware
     Route::middleware(['student.auth'])->group(function () {
-        Route::get('/student/profile', [AuthStudentController::class, 'getProfile']);
-        Route::put('/student/profile', [AuthStudentController::class, 'updateProfile']);
+        Route::get('/student/profile', [StudentAuthController::class, 'Profile']);
+        Route::post('/student/updateProfile', [StudentAuthController::class, 'updateProfile']);
     });
 
     Route::middleware(['teacher.auth'])->group(function () {
         Route::get('/teacher/profile', [TeacherAuthController::class, 'profile']);
         Route::put('/teacher/profile', [TeacherAuthController::class, 'updateProfile']);
-        Route::get('/teacher/students', [AuthStudentController::class, 'getStudentsByTeacher']);
+        Route::get('/teacher/students', [StudentAuthController::class, 'getStudentsByTeacher']);
     });
 });
 Route::get('/', function () {

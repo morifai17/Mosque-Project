@@ -11,7 +11,7 @@ class QuranCircleStudent extends Model
 
     protected $table = 'quran_circles_students'; // custom table name
 
-    protected $fillable = ['class_id', 'teacher_id', 'student_name', 'phone_number', 'is_registered'];
+    protected $fillable = ['quran_circle', 'teacher_id', 'student_name', 'phone_number', 'is_registered'];
 
     // Belongs to a circle
     public function circle()

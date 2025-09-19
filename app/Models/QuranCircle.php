@@ -9,14 +9,15 @@ class QuranCircle extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['teacher_id'];
+    protected $fillable = ['teacher_id','title'];
 
     // Each circle belongs to a teacher
+
     public function teacher()
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(TeacherList::class, 'teacher_id');
     }
-
+  
     // The students pre-registered in this circle
     public function preRegisteredStudents()
     {
