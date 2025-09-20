@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\QuranCircleStudent;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-
+use App\Models\StudentPoint;
 class StudentAuthController extends Controller
 {
 
@@ -214,58 +213,37 @@ public function updateProfile(Request $request)
     ]);
 }
 
-    public function updatePoints(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'points' => 'required|integer|min:0',
-        ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+    public function pointsHistory(Request $request)
+{
+    // جلب الطالب من الـ token
+    $student = Auth::guard('student')->user();
 
-        $student = $request->user();
-        $student->points = $request->points;
-        $student->save();
+    if (!$student) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Student not found or not logged in',
+        ], 401);
+    }
 
+    // جلب سجل تغييرات النقاط للطالب
+    $pointsHistory = StudentPoint::where('student_id', $student->id)
+        ->orderBy('changed_at', 'desc')
+        ->get(['id','points_change', 'reason', 'performed_by', 'changed_at']);
+
+    if ($pointsHistory->isEmpty()) {
         return response()->json([
             'success' => true,
-            'message' => 'تم تحديث النقاط بنجاح',
-            'points' => $student->points,
+            'message' => 'No points history found',
+            'history' => []
         ]);
     }
 
-    public function getStudentsByTeacher(Request $request, $teacherId)
-    {
-        $validator = Validator::make(['teacher_id' => $teacherId], [
-            'teacher_id' => 'required|exists:teachers,id',
-        ]);
+    return response()->json([
+        'success' => true,
+        'history' => $pointsHistory
+    ]);
+}
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
-        $students = Student::where('teacher_id', $teacherId)
-            ->get()
-            ->map(function ($student) {
-                if ($student->avatar) {
-                    $student->avatar = Storage::disk('public')->exists($student->avatar)
-                        ? asset(Storage::url($student->avatar))
-                        : null;
-                }
-                unset($student->password);
-                return $student;
-            });
-
-        return response()->json([
-            'success' => true,
-            'students' => $students,
-        ]);
-    }
 }

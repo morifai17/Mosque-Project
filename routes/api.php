@@ -37,6 +37,11 @@ Route::prefix('admin')->group(function () {
 
 Route::prefix('admin')->group(function () {
     Route::post('/addTeacher', [AdminDashboardController::class, 'addTeacher']);
+    Route::get('/teachers', [AdmindashboardController::class, 'getTeachers']);
+    Route::get('/quranCircles', [AdmindashboardController::class, 'getQuranCircles']);
+    Route::get('/pointsChanges', [AdmindashboardController::class, 'pointsChanges']);
+
+
 });
 
 
@@ -45,7 +50,6 @@ Route::prefix('admin')->group(function () {
 Route::prefix('teacher')->group(function () {
     Route::post('/register', [TeacherAuthController::class, 'register']);
     Route::get('/login', [TeacherAuthController::class, 'login']);
-    Route::get('/teachers', [TeacherAuthController::class, 'getTeachers']);
 
 Route::middleware('auth:teacher')->group(function () {
         Route::get('/profile', [TeacherAuthController::class, 'profile']);
@@ -59,6 +63,11 @@ Route::middleware('auth:teacher')->group(function () {
 //---------------------Teacher Dashboard-----------------------------
 Route::prefix('teacher')->group(function () {
     Route::post('/addStudent', [TeacherDashboardController::class, 'addStudent']);
+    Route::get('/deleteStudent', [TeacherDashboardController::class, 'deleteStudent']);
+    Route::get('/getStudents', [TeacherDashboardController::class, 'getStudents']);
+    Route::post('/updateStudentPoints', [TeacherDashboardController::class, 'updateStudentPoints']);
+    Route::get('/myStudentsPoints', [TeacherDashboardController::class, 'myStudentsPoints']);
+
 });
 
 
@@ -67,7 +76,8 @@ Route::prefix('student')->group(function () {
     Route::post('/register', [StudentAuthController::class, 'register']);
     Route::get('/login', [StudentAuthController::class, 'login']);
     Route::middleware('auth:sanctum')->get('/logout', [StudentAuthController::class, 'logout']);
-    Route::middleware('auth:sanctum')->get('/profile', [StudentAuthController::class, 'profile']);
+    Route::middleware('auth:sanctum')->get('/profile', [StudentAuthController::class, 'profile']);  
+    Route::middleware('auth:sanctum')->get('/pointsHistory', [StudentAuthController::class, 'pointsHistory']);
     Route::middleware('auth:sanctum')->post('/updatProfile', [StudentAuthController::class, 'updateProfile']);
 
 });

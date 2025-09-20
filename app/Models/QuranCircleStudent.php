@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
+
 
 class QuranCircleStudent extends Model
 {
@@ -30,5 +32,22 @@ class QuranCircleStudent extends Model
     {
         return $this->belongsTo(Student::class, 'phone_number', 'phone_number');
     }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * Get the updated_at attribute in a specific format.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getUpdatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
 }
 

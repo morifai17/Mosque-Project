@@ -30,7 +30,10 @@ class Student extends Authenticatable
         return $this->hasMany(Cart::class);
     }
 
-
+  public function pointsHistory()
+    {
+        return $this->hasMany(StudentPoint::class, 'student_id');
+    }
       public function getCreatedAtAttribute($value)
     {
         return Carbon::parse($value)->format('Y-m-d H:i:s');

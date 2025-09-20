@@ -19,7 +19,7 @@ public function register(Request $request)
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'phone_number' => 'required',
-        'password' => 'required|min:6',
+        'password' => 'required',
         'code' => 'required|string', 
         'avatar' => 'nullable|image|mimes:jpg,jpeg,png',
     ]);
@@ -204,45 +204,6 @@ public function register(Request $request)
         ]);
     }
 
- public function getTeachers(Request $request) 
-{
-    // ✅ إذا بعت id → رجّع معلّم واحد فقط
-    if ($request->has('id')) {
-        $teacher = TeacherList::find($request->id);
-
-        if (!$teacher) {
-            return response()->json(['error' => 'Teacher not found'], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'teacher' => $teacher
-        ]);
-    }
-
-    // ✅ إذا ما في id → رجّع قائمة المعلمين مع البحث
-    $query = TeacherList::query();
-
-    if ($request->filled('search')) {
-        $searchTerm = $request->search;
-        $query->where(function ($q) use ($searchTerm) {
-            $q->where('first_name', 'LIKE', "%{$searchTerm}%")
-              ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
-              ->orWhere('phone_number', 'LIKE', "%{$searchTerm}%"); 
-        });
-    }
-
-    $teachers = $query->get();
-
-    if ($teachers->isEmpty()) {
-        return response()->json(['error' => 'No teachers found'], 404);
-    }
-
-    return response()->json([
-        'success' => true,
-        'teachers' => $teachers
-    ]);
-}
 
 
 
