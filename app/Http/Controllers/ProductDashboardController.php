@@ -4,232 +4,175 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
 class ProductDashboardController extends Controller
 {
     /**
-     * عرض جميع المنتجات مع البحث والترتيب
+     * عرض جميع المنتجات
      */
-    public function index(Request $request)
-    {
-        // التحقق من صلاحية المشرف
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
+public function index()
+{
+    $products = Product::with('category')->get();
 
-        $products = Product::with('category')
-            ->when($request->search, function ($query) use ($request) {
-                $query->where(function ($query) use ($request) {
-                    $query->where('title', 'LIKE', '%' . $request->search . '%')
-                          ->orWhere('description', 'LIKE', '%' . $request->search . '%');
-                });
-            })
-            ->when($request->category_id, function ($query) use ($request) {
-                $query->where('category_id', $request->category_id);
-            })
-            ->orderBy('price', $request->sort_price ?? 'desc')
-            ->paginate(10);
+    $data = $products->map(function($product) {
+        return [
+            'id' => $product->id,   // ← لازم يكون موجود
+            'title' => $product->title,
+            'price' => $product->price,
+            'quantity' => $product->quantity,
+            'description' => $product->description,
+            'image' => $product->image,
+            'category' => $product->category ? $product->title : null,
+        ];
+    });
 
-        $categories = Category::all();
+    return response()->json(['success' => true, 'products' => $data]);
+}
 
-        return response()->json([
-            'success' => true,
-            'products' => $products,
-            'categories' => $categories
-        ]);
-    }
+public function page()
+{
+    $categories = Category::all(); // جلب كل الفئات
+    return view('dashboard.products', compact('categories')); // تمرير المتغير للـ Blade
+}
+
+
 
     /**
-     * عرض نموذج إضافة منتج
+     * إضافة منتج جديد
      */
-    public function create()
+    public function create(Request $request)
     {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
-
-        $categories = Category::all();
-
-        return response()->json([
-            'success' => true,
-            'categories' => $categories
-        ]);
-    }
-
-    /**
-     * حفظ منتج جديد
-     */
-    public function store(Request $request)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
-
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
             'price' => 'required|integer|min:0',
             'quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
+        // إنشاء المنتج
         $product = Product::create([
-            'category_id' => $request->category_id,
-            'title' => $request->title,
-            'price' => $request->price,
-            'quantity' => $request->quantity,
-            'description' => $request->description,
+            'category_id' => $validated['category_id'],
+            'title' => $validated['title'],
+            'price' => $validated['price'],
+            'quantity' => $validated['quantity'],
+            'description' => $validated['description'],
         ]);
+
+        // حفظ الصورة إذا وجدت
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+
+            // تحديث الصورة الرئيسية في المنتج
+            $product->update(['image' => $imagePath]);
+
+            // إضافة الصورة إلى جدول الصور
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => $imagePath,
+                'is_main' => true
+            ]);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'تم إضافة المنتج بنجاح',
-            'product' => $product->load('category')
+            'product' => $product->load(['category', 'images'])
         ], 201);
     }
 
     /**
      * عرض منتج محدد
      */
-    public function show($id)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
+    public function show()
+{
+    $products = Product::with(['category', 'images'])->get();
 
-        $product = Product::with('category')->find($id);
-
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'المنتج غير موجود'
-            ], 404);
-        }
-
+    if ($products->isEmpty()) {
         return response()->json([
-            'success' => true,
-            'product' => $product
-        ]);
+            'success' => false,
+            'message' => 'لا توجد منتجات'
+        ], 404);
     }
+
+    return response()->json([
+        'success' => true,
+        'products' => $products,
+        'count' => $products->count()
+    ]);
+}
 
     /**
-     * عرض نموذج تعديل منتج
+     * تحديث منتج موجود
      */
-    public function edit($id)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
+ public function update(Request $request, $id)
+{
+    $product = Product::find($id);
 
-        $product = Product::with('category')->find($id);
-        $categories = Category::all();
-
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'المنتج غير موجود'
-            ], 404);
-        }
-
+    if (!$product) {
         return response()->json([
-            'success' => true,
-            'product' => $product,
-            'categories' => $categories
-        ]);
+            'success' => false,
+            'message' => '❌ المنتج غير موجود'
+        ], 404);
     }
 
-    /**
-     * تحديث بيانات المنتج
-     */
-    public function update(Request $request, $id)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
+    $product->update($request->only([
+        'title', 'price', 'quantity', 'description', 'category_id'
+    ]));
 
-        $product = Product::find($id);
-
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'المنتج غير موجود'
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'sometimes|required|exists:categories,id',
-            'title' => 'sometimes|required|string|max:255',
-            'price' => 'sometimes|required|integer|min:0',
-            'quantity' => 'sometimes|required|integer|min:0',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $product->update($request->only([
-            'category_id', 'title', 'price', 'quantity', 'description'
-        ]));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تحديث المنتج بنجاح',
-            'product' => $product->load('category')
-        ]);
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store('products', 'public');
+        $product->image = $path;
+        $product->save();
     }
+
+    return response()->json([
+        'success' => true,
+        'message' => '✅ تم تعديل المنتج بنجاح',
+        'product' => $product
+    ]);
+}
+
+
 
     /**
      * حذف منتج
      */
-    public function destroy($id)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
+ public function destroy($id)
+{
+    $product = Product::find($id);
 
+    if (!$product) {
+        return response()->json([
+            'success' => false,
+            'message' => 'المنتج غير موجود'
+        ], 404);
+    }
+
+    if ($product->image) {
+        Storage::disk('public')->delete($product->image);
+    }
+
+    $product->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'تم حذف المنتج بنجاح'
+    ]);
+}
+
+
+
+    /**
+     * إضافة صور إضافية للمنتج
+     */
+    public function addImages(Request $request, $id)
+    {
         $product = Product::find($id);
 
         if (!$product) {
@@ -239,89 +182,64 @@ class ProductDashboardController extends Controller
             ], 404);
         }
 
-        $product->delete();
+        $request->validate([
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'set_as_main' => 'nullable|boolean'
+        ]);
+
+        $uploadedImages = [];
+
+        foreach ($request->file('images') as $image) {
+            $imagePath = $image->store('products', 'public');
+
+            $productImage = ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => $imagePath,
+                'is_main' => false
+            ]);
+
+            $uploadedImages[] = $productImage;
+        }
+
+        // إذا طلب تعيين أحد الصور كرئيسية
+        if ($request->set_as_main && count($uploadedImages) > 0) {
+            $mainImage = $uploadedImages[0];
+            $mainImage->update(['is_main' => true]);
+            $product->update(['image' => $mainImage->image_path]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'تم حذف المنتج بنجاح'
+            'message' => 'تم إضافة الصور بنجاح',
+            'images' => $uploadedImages
         ]);
     }
 
     /**
-     * تحديث كمية المنتج
+     * تعيين صورة رئيسية
      */
-    public function updateQuantity(Request $request, $id)
+    public function setMainImage(Request $request, $productId, $imageId)
     {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
+        $product = Product::find($productId);
+        $image = ProductImage::find($imageId);
+
+        if (!$product || !$image || $image->product_id != $productId) {
             return response()->json([
                 'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'quantity' => 'required|integer|min:0'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $product = Product::find($id);
-
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'المنتج غير موجود'
+                'message' => 'المنتج أو الصورة غير موجودة'
             ], 404);
         }
 
-        $product->update(['quantity' => $request->quantity]);
+        // إلغاء تعيين جميع الصور كرئيسية
+        ProductImage::where('product_id', $productId)->update(['is_main' => false]);
+
+        // تعيين الصورة المحددة كرئيسية
+        $image->update(['is_main' => true]);
+        $product->update(['image' => $image->image_path]);
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تحديث الكمية بنجاح',
-            'product' => $product
-        ]);
-    }
-
-    /**
-     * البحث في المنتجات
-     */
-    public function search(Request $request)
-    {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح بالوصول'
-            ], 401);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'search' => 'required|string|min:2'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $products = Product::with('category')
-            ->where('title', 'LIKE', '%' . $request->search . '%')
-            ->orWhere('description', 'LIKE', '%' . $request->search . '%')
-            ->orderBy('price', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'products' => $products
+            'message' => 'تم تعيين الصورة كرئيسية بنجاح'
         ]);
     }
 }

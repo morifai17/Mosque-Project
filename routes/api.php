@@ -86,14 +86,10 @@ Route::prefix('student')->group(function () {
 
 // ----------------- مسارات Dashboard للـ Products -----------------
 Route::prefix('dashboard/products')->group(function () {
-    Route::get('/', [ProductDashboardController::class, 'index']);
-    Route::get('/create', [ProductDashboardController::class, 'create']);
-    Route::post('/', [ProductDashboardController::class, 'store']);
-    Route::get('/{id}', [ProductDashboardController::class, 'show']);
-    Route::get('/{id}/edit', [ProductDashboardController::class, 'edit']);
-    Route::put('/{id}', [ProductDashboardController::class, 'update']);
-    Route::delete('/{id}', [ProductDashboardController::class, 'destroy']);
-    Route::patch('/{id}/quantity', [ProductDashboardController::class, 'updateQuantity']);
-    Route::get('/search/{query}', [ProductDashboardController::class, 'search']);
+    Route::get('/index', [ProductDashboardController::class, 'index']);
+    Route::post('/create', [ProductDashboardController::class, 'create']);
+    Route::get('/show/{id}', [ProductDashboardController::class, 'show']);
+    Route::put('/update/{id}', [ProductDashboardController::class, 'update']);
+    Route::delete('/destroy/{id}', [ProductDashboardController::class, 'destroy']);
 });
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\TeacherAuthController;
@@ -157,6 +158,14 @@ Route::prefix('dashboard')->group(function () {
 });
 
 
+Route::prefix('dashboard/products')->group(function () {
+    Route::get('/index', [ProductDashboardController::class, 'index']);
+    Route::post('/store', [ProductDashboardController::class, 'create']);
+    Route::get('', [ProductDashboardController::class, 'page'])->name('dashboard.products');
+Route::put('/update/{id}', [ProductDashboardController::class,'update']);
+    Route::delete('/destroy/{id}', [ProductDashboardController::class,'destroy'])
+        ->name('dashboard.products.destroy');
+});
 
 
 
