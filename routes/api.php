@@ -7,6 +7,7 @@ use App\Http\Controllers\CouponDashboardController;
 use App\Http\Controllers\TeacherAuthController;
 use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductDashboardController;
 use App\Http\Controllers\TeacherDashboardController;
 use Illuminate\Http\Request;
@@ -84,6 +85,13 @@ Route::prefix('student')->group(function () {
 
 });
 
+// ----------------- Cart -----------------
+Route::prefix('cart')->group(function () {
+    Route::post('/add', [CartController::class, 'add']);
+    Route::post('/remove', [CartController::class, 'remove']);
+    Route::get('/get', [CartController::class, 'get']);
+
+});
 
 
 // ----------------- مسارات Dashboard للـ Products -----------------
