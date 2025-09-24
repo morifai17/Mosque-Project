@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CategoryDashboardController;
+use App\Http\Controllers\CouponDashboardController;
 use App\Http\Controllers\ProductDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentAuthController;
@@ -124,9 +126,9 @@ Route::prefix('dashboard')->group(function () {
         return view('dashboard.coupons');
     })->name('dashboard.coupons');
 
-    // Route::get('/home-content', function () {
-    //     return view('dashboard.home-content');
-    // })->name('dashboard.home');
+    Route::get('/teacher', function () {
+        return view('dashboard.teacher');
+    })->name('dashboard.teacher');
 
     Route::get('/layouts', function () {
         return view('dashboard.layouts');
@@ -148,9 +150,9 @@ Route::prefix('dashboard')->group(function () {
         return view('dashboard.QuranCycle');
     })->name('dashboard.quran');
 
-    Route::get('/students-content', function () {
-        return view('dashboard.students-content');
-    })->name('dashboard.students');
+    Route::get('/categories', function () {
+        return view('dashboard.categories');
+    })->name('dashboard.categories');
 
     Route::get('/users', function () {
         return view('dashboard.users');
@@ -162,10 +164,28 @@ Route::prefix('dashboard/products')->group(function () {
     Route::get('/index', [ProductDashboardController::class, 'index']);
     Route::post('/store', [ProductDashboardController::class, 'create']);
     Route::get('', [ProductDashboardController::class, 'page'])->name('dashboard.products');
-Route::put('/update/{id}', [ProductDashboardController::class,'update']);
-    Route::delete('/destroy/{id}', [ProductDashboardController::class,'destroy'])
+Route::put('/{id}', [ProductDashboardController::class, 'update'])->name('dashboard.products.update');
+    Route::delete('/{id}', [ProductDashboardController::class,'destroy'])
         ->name('dashboard.products.destroy');
 });
 
 
+Route::prefix('dashboard/categories')->group(function () {
+    // صفحة Blade لإدارة الفئات
 
+    // العمليات عبر الـ Web (عادة تستخدم Form + Method POST/PUT/DELETE)
+    Route::get('/index', [CategoryDashboardController::class, 'index'])->name('categories.index');        // عرض كل الفئات
+    Route::post('/create', [CategoryDashboardController::class, 'create'])->name('categories.create');    // إنشاء فئة جديدة
+    Route::get('/show/{id}', [CategoryDashboardController::class, 'show'])->name('categories.show');      // عرض فئة محددة
+    Route::put('/update/{id}', [CategoryDashboardController::class, 'update'])->name('categories.update'); // تعديل فئة
+    Route::delete('/destroy/{id}', [CategoryDashboardController::class, 'destroy'])->name('categories.destroy'); // حذف فئة
+});
+
+
+Route::prefix('dashboard/coupons')->group(function () {
+    Route::get('/index', [CouponDashboardController::class, 'index']);       // عرض جميع الكوبونات
+    Route::post('/create', [CouponDashboardController::class, 'create']);     // إنشاء كوبون جديد
+    Route::get('/{id}', [CouponDashboardController::class, 'show']);    // عرض كوبون محدد
+    Route::put('update/{id}', [CouponDashboardController::class, 'update']);  // تعديل كوبون
+    Route::delete('/{id}', [CouponDashboardController::class, 'destroy']); // حذف كوبون
+});

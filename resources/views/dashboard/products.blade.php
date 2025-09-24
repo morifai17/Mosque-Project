@@ -282,12 +282,12 @@
                             <span>الطلاب</span>
                         </a>
                     </div>
-                    {{-- <div class="nav-item">
+                    <div class="nav-item">
                         <a href="{{ route('dashboard.teacher') }}">
                             <i class="fas fa-chalkboard-teacher"></i>
                             <span>المعلمين</span>
                         </a>
-                    </div> --}}
+                    </div>
                 </div>
             </div>
 
@@ -326,25 +326,25 @@
                 </a>
             </div>
 
-            <div class="nav-item delayed-8">
+            {{-- <div class="nav-item delayed-8">
                 <a href="{{ route('dashboard.QuranCycle') }}">
                     <i class="fas fa-book-quran"></i>
                     <span>دورات القرآن</span>
                 </a>
-            </div>
+            </div> --}}
 
             <div class="nav-item delayed-9 has-submenu" onclick="toggleSubmenu(this)">
                 <a href="javascript:void(0)">
                     <i class="fas fa-graduation-cap"></i>
                     <span>المحتوى التعليمي</span>
                 </a>
-                <div class="submenu pl-4">
+                {{-- <div class="submenu pl-4">
                     <div class="nav-item">
                         <a href="{{ route('dashboard.students-content') }}">
                             <i class="fas fa-book-reader"></i>
                             <span>محتويات الطلاب</span>
                         </a>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </nav>
@@ -605,38 +605,32 @@
     });
 
     // تعديل منتج
-    document.getElementById("editForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const id = document.getElementById("edit-id").value;
-        const formData = new FormData(e.target);
-        formData.append('_method', 'PUT');
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
+   // تعديل منتج
+document.getElementById("editForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const id = document.getElementById("edit-id").value;
+    const formData = new FormData(e.target);
+    formData.append('_method', 'PUT');
 
-        try {
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
-            submitBtn.disabled = true;
-
-            const response = await fetch("{{ url('dashboard/products/update') }}/" + id, {
-                method:"POST",
-                body: formData
-            });
-            const data = await response.json();
-            if(data.success) {
-                alert("✅ تم تعديل المنتج بنجاح!");
-                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-                loadProducts();
-            } else {
-                alert("❌ فشل التعديل: " + (data.message || 'خطأ غير معروف'));
-            }
-        } catch(err) {
-            alert("⚠️ حدث خطأ أثناء التعديل");
-            console.error(err);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+    try {
+        const response = await fetch("{{ url('dashboard/products') }}/" + id, {
+            method: "POST", // Laravel سيعامله كـ PUT
+            body: formData
+        });
+        const data = await response.json();
+        if(data.success) {
+            alert("✅ تم تعديل المنتج بنجاح!");
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            loadProducts();
+        } else {
+            alert("❌ فشل التعديل: " + (data.message || 'خطأ غير معروف'));
         }
-    });
+    } catch(err) {
+        alert("⚠️ حدث خطأ أثناء التعديل");
+        console.error(err);
+    }
+});
+
 
     // ربط أزرار التعديل
     function attachEditButtons() {
@@ -654,31 +648,35 @@
     }
 
     // ربط أزرار الحذف
-    function attachDeleteButtons() {
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                if(confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-                    try {
-                        const response = await fetch("{{ url('dashboard/products/destroy') }}/" + id, {
-                            method: 'DELETE',
-                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                        });
-                        const data = await response.json();
-                        if(data.success) {
-                            alert("✅ تم حذف المنتج بنجاح!");
-                            loadProducts();
-                        } else {
-                            alert("❌ فشل الحذف: " + (data.message || 'خطأ غير معروف'));
-                        }
-                    } catch(err) {
-                        alert("⚠️ حدث خطأ أثناء الحذف");
-                        console.error(err);
+    async function attachDeleteButtons() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if(confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                let formData = new FormData();
+                formData.append('_method', 'DELETE');
+                formData.append('_token', '{{ csrf_token() }}');
+
+                try {
+                    const response = await fetch("{{ url('dashboard/products') }}/" + id, {
+                        method: 'POST', // Laravel يتعامل معها كـ DELETE
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if(data.success) {
+                        alert("✅ تم حذف المنتج بنجاح!");
+                        loadProducts();
+                    } else {
+                        alert("❌ فشل الحذف: " + (data.message || 'خطأ غير معروف'));
                     }
+                } catch(err) {
+                    alert("⚠️ حدث خطأ أثناء الحذف");
+                    console.error(err);
                 }
-            });
+            }
         });
-    }
+    });
+}
 
     // دالة لإظهار/إخفاء القائمة الجانبية في الهاتف
     function toggleSidebar() {

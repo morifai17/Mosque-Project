@@ -218,7 +218,7 @@
     <aside class="sidebar w-64 min-h-screen">
         <div class="logo">
             <i class="fas fa-mosque"></i>
-            <h1 class="text-xl font-bold">مسجد الرحمن</h1>
+            <h1 class="text-xl font-bold">مسجد الخانقية</h1>
         </div>
         <nav class="mt-6">
             <div class="nav-item delayed-1 active-nav">
@@ -283,13 +283,13 @@
                     <span>الطلبات</span>
                 </a>
             </div>
-
+{{--
             <div class="nav-item delayed-8">
                 <a href="{{ route('dashboard.QuranCycle') }}">
                     <i class="fas fa-book-quran"></i>
                     <span>دورات القرآن</span>
                 </a>
-            </div>
+            </div> --}}
 
             <div class="nav-item delayed-9 has-submenu" onclick="toggleSubmenu(this)">
                 <a href="javascript:void(0)">
@@ -297,12 +297,12 @@
                     <span>المحتوى التعليمي</span>
                 </a>
                 <div class="submenu pl-4">
-                    <div class="nav-item">
+                    {{-- <div class="nav-item">
                         <a href="{{ route('dashboard.students-content') }}">
                             <i class="fas fa-book-reader"></i>
                             <span>محتويات الطلاب</span>
                         </a>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </nav>
