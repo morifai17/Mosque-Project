@@ -46,9 +46,9 @@ class AdminAuthController extends Controller
         'token' => $token,
     ], 201);
 }
-    
 
-   public function login(Request $request)
+
+public function login(Request $request)
 {
     $request->validate([
         'phone_number' => 'required|numeric|exists:admins',
@@ -68,9 +68,9 @@ class AdminAuthController extends Controller
                 ], 200);
             }
         }
-        
+
         $admin->avatar = asset($admin->avatar);
-        
+
         return response()->json([
             'success' => true,
             'token' => $admin->createToken('admin Token')->plainTextToken,
@@ -124,7 +124,7 @@ class AdminAuthController extends Controller
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-       
+
 
         // تحديث الحقول
         if ($request->has('first_name')) {

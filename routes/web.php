@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CategoryDashboardController;
 use App\Http\Controllers\CouponDashboardController;
 use App\Http\Controllers\ProductDashboardController;
@@ -115,9 +116,13 @@ Route::get('/settings', function () {
 
 
 
+Route::post('/api/login', [AdminAuthController::class, 'login']);
 
 Route::prefix('dashboard')->group(function () {
 
+    Route::get('/login', function () {
+        return view('dashboard.login');
+    })->name('dashboard.login');
     Route::get('/admins', function () {
         return view('dashboard.admins');
     })->name('dashboard.admins');

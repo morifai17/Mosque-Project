@@ -514,7 +514,7 @@
 
             if (data.success && data.products.length) {
                 data.products.forEach(p => {
-                    const imageUrl = p.image ? `/storage/${p.image}` : `/storage/default-image.png`;
+const imageUrl = p.image ? `/storage/products/${p.image}` : '/images/default-image.png';
                     container.innerHTML += `
                     <div class="bg-white rounded-xl overflow-hidden shadow-md product-card">
                         <img src="${imageUrl}" class="w-full h-48 object-cover" alt="${p.title}">
