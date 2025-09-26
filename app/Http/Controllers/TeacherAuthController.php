@@ -10,7 +10,7 @@ use App\Models\TeacherList;
 use Illuminate\Support\Facades\Auth;
 
 
-class TeacherAuthController extends Controller  
+class TeacherAuthController extends Controller
 {
 
 public function register(Request $request)
@@ -20,7 +20,7 @@ public function register(Request $request)
         'last_name' => 'required|string|max:255',
         'phone_number' => 'required',
         'password' => 'required',
-        'code' => 'required|string', 
+        'code' => 'required|string',
         'avatar' => 'nullable|image|mimes:jpg,jpeg,png',
     ]);
 
@@ -204,7 +204,26 @@ public function register(Request $request)
         ]);
     }
 
+public function getTeachers()
+{
+    try {
+        // جلب جميع المعلمين بدون شرط status
+        $teachers = Teacher::select('id', 'first_name', 'last_name', 'phone_number')
+            ->orderBy('first_name')
+            ->get();
 
+        return response()->json([
+            'success' => true,
+            'teachers' => $teachers,
+            'count' => $teachers->count()
+        ]);
 
-
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'حدث خطأ أثناء جلب بيانات المعلمين',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 }

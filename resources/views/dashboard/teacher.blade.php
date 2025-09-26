@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة المعلمين - لوحة التحكم</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -525,21 +526,26 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // المتغيرات العامة
-    let students = [];
-    let circles = [];
+   <script>
+// المتغيرات العامة
+let students = [];
+let circles = [];
 
-    // دالة لتحميل حلقات القرآن
-    async function loadCircles() {
-        try {
-            // في الواقع، ستقوم باستدعاء API لتحميل حلقات القرآن
-            // هذا مثال افتراضي
-            circles = [
-                { id: 1, title: "حلقة القرآن الأولى" },
-                { id: 2, title: "حلقة القرآن الثانية" },
-                { id: 3, title: "حلقة القرآن الثالثة" }
-            ];
+// دالة لتحميل حلقات القرآن الخاصة بالمعلم
+async function loadCircles() {
+    try {
+        console.log('جاري تحميل حلقات القرآن...');
+        const response = await fetch('/teacher/getTeacherCircles');
+
+        if (!response.ok) {
+            throw new Error(`خطأ في الشبكة: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('استجابة الحلقات:', data);
+
+        if (data.success) {
+            circles = data.circles || [];
 
             // ملء select حلقات القرآن في modal الإضافة
             const circleSelect = document.getElementById('circle-select');
@@ -555,319 +561,398 @@
                 circleFilter.innerHTML += `<option value="${circle.id}">${circle.title}</option>`;
             });
 
-        } catch (error) {
-            console.error('Error loading circles:', error);
+            console.log('تم تحميل الحلقات بنجاح:', circles.length);
+        } else {
+            console.error('Error loading circles:', data.message);
+            // استخدام بيانات افتراضية في حالة الخطأ
+            circles = [
+                { id: 1, title: "حلقة القرآن الأولى" },
+                { id: 2, title: "حلقة القرآن الثانية" }
+            ];
+            showTemporaryCircles();
         }
+    } catch (error) {
+        console.error('Error loading circles:', error);
+        // استخدام بيانات افتراضية في حالة الخطأ
+        circles = [
+            { id: 1, title: "حلقة القرآن الأولى" },
+            { id: 2, title: "حلقة القرآن الثانية" }
+        ];
+        showTemporaryCircles();
     }
+}
 
-    // دالة لتحميل الطلاب
-    async function loadStudents(circleId = '', searchTerm = '') {
-        const container = document.getElementById("students-container");
-        container.innerHTML = `
-            <div class="col-span-full text-center py-8">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-4 text-gray-600">جاري تحميل الطلاب...</p>
-            </div>
-        `;
+// دالة لعرض الحلقات المؤقتة
+function showTemporaryCircles() {
+    const circleSelect = document.getElementById('circle-select');
+    const circleFilter = document.getElementById('circle-filter');
 
-        try {
-            // بناء query string للبحث والتصفية
-            let url = '/teacher/getStudents';
-            const params = new URLSearchParams();
+    circleSelect.innerHTML = '<option value="">-- اختر حلقة القرآن --</option>';
+    circleFilter.innerHTML = '<option value="">جميع حلقات القرآن</option>';
 
-            if (circleId) params.append('quran_circle_id', circleId);
-            if (searchTerm) params.append('search', searchTerm);
+    circles.forEach(circle => {
+        circleSelect.innerHTML += `<option value="${circle.id}">${circle.title}</option>`;
+        circleFilter.innerHTML += `<option value="${circle.id}">${circle.title}</option>`;
+    });
+}
 
-            if (params.toString()) {
-                url += '?' + params.toString();
-            }
+// دالة لتحميل الطلاب
+// دالة لتحميل الطلاب
+async function loadStudents(circleId = '', searchTerm = '') {
+    const container = document.getElementById("students-container");
+    container.innerHTML = `
+        <div class="col-span-full text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="mt-4 text-gray-600">جاري تحميل الطلاب...</p>
+        </div>
+    `;
 
-            const response = await fetch(url);
-            const data = await response.json();
+    try {
+        console.log('جاري تحميل الطلاب...', { circleId, searchTerm });
 
-            if (data.success && data.students.length) {
-                students = data.students;
-                container.innerHTML = "";
+        // بناء query string للبحث والتصفية
+        let url = '/teacher/getStudents';
+        const params = new URLSearchParams();
 
-                data.students.forEach(student => {
-                    const circle = circles.find(c => c.id == student.quran_circle) || { title: 'غير معروف' };
+        if (circleId) params.append('quran_circle_id', circleId);
+        if (searchTerm) params.append('search', searchTerm);
 
-                    container.innerHTML += `
-                    <div class="bg-white rounded-xl overflow-hidden shadow-md teacher-card">
-                        <div class="p-4">
-                            <h3 class="font-bold text-lg mb-2 text-gray-800">${student.student_name}</h3>
-                            <p class="text-sm text-gray-600 mb-2">
-                                <i class="fas fa-phone ml-2"></i> ${student.phone_number}
-                            </p>
-                            <p class="text-sm text-gray-600 mb-4">
-                                <i class="fas fa-book-quran ml-2"></i> ${circle.title}
-                            </p>
-                            <div class="flex justify-between">
-                                <button class="btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg delete-student-btn flex items-center text-sm" data-id="${student.id}">
-                                    <i class="fas fa-trash ml-1"></i> حذف
-                                </button>
-                            </div>
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        console.log('URL المطلوب:', url);
+
+        const response = await fetch(url);
+        console.log('استجابة الخادم:', response);
+
+        const data = await response.json();
+        console.log('البيانات المستلمة:', data);
+
+        if (data.success && data.students && data.students.length) {
+            students = data.students;
+            container.innerHTML = "";
+
+            data.students.forEach(student => {
+                const circle = circles.find(c => c.id == student.quran_circle) || { title: 'غير معروف' };
+
+                container.innerHTML += `
+                <div class="bg-white rounded-xl overflow-hidden shadow-md teacher-card">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">${student.student_name}</h3>
+                        <p class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-phone ml-2"></i> ${student.phone_number}
+                        </p>
+                        <p class="text-sm text-gray-600 mb-4">
+                            <i class="fas fa-book-quran ml-2"></i> ${circle.title}
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm ${student.is_registered ? 'text-green-600' : 'text-yellow-600'}">
+                                <i class="fas ${student.is_registered ? 'fa-check-circle' : 'fa-clock'} ml-1"></i>
+                                ${student.is_registered ? 'مسجل في النظام' : 'غير مسجل'}
+                            </span>
+                            <button class="btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg delete-student-btn flex items-center text-sm" data-id="${student.id}">
+                                <i class="fas fa-trash ml-1"></i> حذف
+                            </button>
                         </div>
-                    </div>`;
-                });
+                    </div>
+                </div>`;
+            });
 
-                // تفعيل أزرار الحذف
-                attachDeleteButtons();
+            // تفعيل أزرار الحذف
+            attachDeleteButtons();
 
-            } else {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-8">
-                        <i class="fas fa-user-graduate text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">لا توجد طلاب</p>
-                        <button class="btn bg-blue-500 hover:bg-blue-600 text-white mt-4" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                            <i class="fas fa-user-plus ml-2"></i> إضافة طالب جديد
-                        </button>
-                    </div>`;
-            }
-        } catch (err) {
+            // تحديث قائمة الطلاب في إدارة النقاط (الطلاب المسجلين فقط)
+            updateStudentSelect(data.students.filter(s => s.is_registered));
+
+        } else {
             container.innerHTML = `
                 <div class="col-span-full text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                    <p class="text-red-600">فشل تحميل الطلاب</p>
-                    <button class="btn bg-blue-500 hover:bg-blue-600 text-white mt-4" onclick="loadStudents()">
-                        <i class="fas fa-refresh ml-2"></i> إعادة المحاولة
+                    <i class="fas fa-user-graduate text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">${data.message || 'لا توجد طلاب'}</p>
+                    <button class="btn bg-blue-500 hover:bg-blue-600 text-white mt-4" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="fas fa-user-plus ml-2"></i> إضافة طالب جديد
                     </button>
                 </div>`;
-            console.error(err);
+
+            // مسح قائمة الطلاب في إدارة النقاط
+            document.getElementById('student-select').innerHTML = '<option value="">-- اختر الطالب --</option>';
         }
+    } catch (err) {
+        console.error('خطأ في تحميل الطلاب:', err);
+        container.innerHTML = `
+            <div class="col-span-full text-center py-8">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                <p class="text-red-600">فشل تحميل الطلاب: ${err.message}</p>
+                <button class="btn bg-blue-500 hover:bg-blue-600 text-white mt-4" onclick="loadStudents()">
+                    <i class="fas fa-refresh ml-2"></i> إعادة المحاولة
+                </button>
+            </div>`;
+    }
+}
+
+// دالة لتحديث قائمة الطلاب في إدارة النقاط
+function updateStudentSelect(registeredStudents) {
+    const studentSelect = document.getElementById('student-select');
+    studentSelect.innerHTML = '<option value="">-- اختر الطالب --</option>';
+
+    if (registeredStudents.length === 0) {
+        studentSelect.innerHTML += '<option value="" disabled>لا توجد طلاب مسجلين</option>';
+        return;
     }
 
-    // إضافة طالب
-    document.getElementById("addStudentForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-
-        try {
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
-            submitBtn.disabled = true;
-
-            const response = await fetch("/teacher/addStudent", {
-                method: "POST",
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-            if(data.success) {
-                alert("✅ تم إضافة الطالب بنجاح!");
-                e.target.reset();
-                bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
-                loadStudents();
-            } else {
-                alert("❌ فشل الإضافة: " + (data.message || 'خطأ غير معروف'));
-            }
-        } catch(err) {
-            alert("⚠️ حدث خطأ أثناء الإضافة");
-            console.error(err);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
+    registeredStudents.forEach(student => {
+        studentSelect.innerHTML += `<option value="${student.id}">${student.student_name} - ${student.phone_number}</option>`;
     });
+}
 
-    // ربط أزرار الحذف
-    function attachDeleteButtons() {
-        document.querySelectorAll('.delete-student-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                if(confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
-                    try {
-                        const response = await fetch(`/teacher/deleteStudent?id=${id}`, {
-                            method: 'GET',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            }
-                        });
+// إضافة طالب
+document.getElementById("addStudentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
 
-                        const data = await response.json();
-                        if(data.success) {
-                            alert("✅ تم حذف الطالب بنجاح!");
-                            loadStudents();
-                        } else {
-                            alert("❌ فشل الحذف: " + (data.message || 'خطأ غير معروف'));
-                        }
-                    } catch(err) {
-                        alert("⚠️ حدث خطأ أثناء الحذف");
-                        console.error(err);
-                    }
-                }
-            });
+    try {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
+        submitBtn.disabled = true;
+
+        const response = await fetch("/teacher/addStudent", {
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: formData
         });
+
+        const data = await response.json();
+        if(data.success) {
+            alert("✅ تم إضافة الطالب بنجاح!");
+            e.target.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+            loadStudents();
+        } else {
+            alert("❌ فشل الإضافة: " + (data.message || 'خطأ غير معروف'));
+        }
+    } catch(err) {
+        alert("⚠️ حدث خطأ أثناء الإضافة");
+        console.error(err);
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// ربط أزرار الحذف
+function attachDeleteButtons() {
+    document.querySelectorAll('.delete-student-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if(confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
+                try {
+                    const response = await fetch(`/teacher/deleteStudent?id=${id}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        }
+                    });
+
+                    const data = await response.json();
+                    if(data.success) {
+                        alert("✅ تم حذف الطالب بنجاح!");
+                        loadStudents();
+                    } else {
+                        alert("❌ فشل الحذف: " + (data.message || 'خطأ غير معروف'));
+                    }
+                } catch(err) {
+                    alert("⚠️ حدث خطأ أثناء الحذف");
+                    console.error(err);
+                }
+            }
+        });
+    });
+}
+
+// تحديث نقاط الطالب
+document.getElementById("update-points-btn").addEventListener("click", async () => {
+    const studentId = document.getElementById("student-select").value;
+    const pointsChange = document.getElementById("points-input").value;
+    const reason = document.getElementById("reason-input").value;
+
+    if (!studentId || !pointsChange || !reason) {
+        alert("⚠️ يرجى ملء جميع الحقول");
+        return;
     }
 
-    // تحديث نقاط الطالب
-    document.getElementById("update-points-btn").addEventListener("click", async () => {
-        const studentId = document.getElementById("student-select").value;
-        const pointsChange = document.getElementById("points-input").value;
-        const reason = document.getElementById("reason-input").value;
+    try {
+        const response = await fetch("/teacher/updateStudentPoints", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                points_change: parseInt(pointsChange),
+                reason: reason
+            })
+        });
 
-        if (!studentId || !pointsChange || !reason) {
-            alert("⚠️ يرجى ملء جميع الحقول");
-            return;
+        const data = await response.json();
+        if(data.success) {
+            alert("✅ تم تحديث نقاط الطالب بنجاح!");
+            document.getElementById("points-input").value = "";
+            document.getElementById("reason-input").value = "";
+            loadPointsHistory(studentId);
+        } else {
+            alert("❌ فشل التحديث: " + (data.message || 'خطأ غير معروف'));
         }
+    } catch(err) {
+        alert("⚠️ حدث خطأ أثناء التحديث");
+        console.error(err);
+    }
+});
 
-        try {
-            const response = await fetch("/teacher/updateStudentPoints", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                },
-                body: JSON.stringify({
-                    student_id: studentId,
-                    points_change: pointsChange,
-                    reason: reason
-                })
+// تحميل سجل النقاط
+async function loadPointsHistory(studentId) {
+    try {
+        const response = await fetch(`/teacher/myStudentsPoints?student_id=${studentId}`);
+        const data = await response.json();
+
+        const container = document.getElementById("points-history-container");
+
+        if (data.success && data.students && data.students.length) {
+            const student = data.students[0];
+            let historyHTML = `
+                <div class="mb-4">
+                    <h4 class="font-semibold">الطالب: ${student.student_name}</h4>
+                    <p class="text-gray-600">النقاط الحالية: ${student.current_points}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التغيير</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السبب</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تم بواسطة</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">`;
+
+            student.points_history.forEach(history => {
+                const changeClass = history.points_change > 0 ? 'text-green-600' : 'text-red-600';
+                historyHTML += `
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap ${changeClass} font-semibold">${history.points_change > 0 ? '+' : ''}${history.points_change}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${history.reason}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${history.performed_by}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${new Date(history.changed_at).toLocaleString('ar-SA')}</td>
+                    </tr>`;
             });
 
-            const data = await response.json();
-            if(data.success) {
-                alert("✅ تم تحديث نقاط الطالب بنجاح!");
-                document.getElementById("points-input").value = "";
-                document.getElementById("reason-input").value = "";
-                loadPointsHistory(studentId);
-            } else {
-                alert("❌ فشل التحديث: " + (data.message || 'خطأ غير معروف'));
-            }
-        } catch(err) {
-            alert("⚠️ حدث خطأ أثناء التحديث");
-            console.error(err);
-        }
-    });
-
-    // تحميل سجل النقاط
-    async function loadPointsHistory(studentId) {
-        try {
-            const response = await fetch(`/teacher/myStudentsPoints?student_id=${studentId}`);
-            const data = await response.json();
-
-            const container = document.getElementById("points-history-container");
-
-            if (data.success && data.students.length) {
-                const student = data.students[0];
-                let historyHTML = `
-                    <div class="mb-4">
-                        <h4 class="font-semibold">الطالب: ${student.student_name}</h4>
-                        <p class="text-gray-600">النقاط الحالية: ${student.current_points}</p>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التغيير</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السبب</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تم بواسطة</th>
-                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">`;
-
-                student.points_history.forEach(history => {
-                    const changeClass = history.points_change > 0 ? 'text-green-600' : 'text-red-600';
-                    historyHTML += `
-                        <tr>
-                            <td class="px-4 py-2 whitespace-nowrap ${changeClass} font-semibold">${history.points_change > 0 ? '+' : ''}${history.points_change}</td>
-                            <td class="px-4 py-2 whitespace-nowrap">${history.reason}</td>
-                            <td class="px-4 py-2 whitespace-nowrap">${history.performed_by}</td>
-                            <td class="px-4 py-2 whitespace-nowrap">${new Date(history.changed_at).toLocaleString('ar-SA')}</td>
-                        </tr>`;
-                });
-
-                historyHTML += `</tbody></table></div>`;
-                container.innerHTML = historyHTML;
-            } else {
-                container.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-info-circle text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">لا يوجد سجل نقاط لهذا الطالب</p>
-                    </div>`;
-            }
-        } catch (err) {
-            console.error('Error loading points history:', err);
-            document.getElementById("points-history-container").innerHTML = `
+            historyHTML += `</tbody></table></div>`;
+            container.innerHTML = historyHTML;
+        } else {
+            container.innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                    <p class="text-red-600">فشل تحميل سجل النقاط</p>
+                    <i class="fas fa-info-circle text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">لا يوجد سجل نقاط لهذا الطالب</p>
                 </div>`;
         }
+    } catch (err) {
+        console.error('Error loading points history:', err);
+        document.getElementById("points-history-container").innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                <p class="text-red-600">فشل تحميل سجل النقاط</p>
+            </div>`;
+    }
+}
+
+// دوال مساعدة للواجهة
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('sidebar-open');
+}
+
+function toggleSubmenu(element) {
+    element.classList.toggle('open');
+    const submenu = element.querySelector('.submenu');
+    submenu.classList.toggle('open');
+}
+
+// دالة لاختبار الاتصال بالخادم
+async function testConnection() {
+    try {
+        const response = await fetch('/teacher/test');
+        const data = await response.json();
+        console.log('اختبار الاتصال:', data);
+        return data.success;
+    } catch (error) {
+        console.error('فشل اختبار الاتصال:', error);
+        return false;
+    }
+}
+// تحميل البيانات عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('بدء تحميل الصفحة...');
+
+    // اختبار الاتصال أولاً
+    const isConnected = await testConnection();
+    console.log('حالة الاتصال:', isConnected ? 'ناجح' : 'فاشل');
+
+    if (!isConnected) {
+        alert('⚠️ هناك مشكلة في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.');
     }
 
-    // دالة لإظهار/إخفاء القائمة الجانبية في الهاتف
-    function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('sidebar-open');
-    }
+    // تحميل حلقات القرآن أولاً
+    await loadCircles();
 
-    // دالة لإظهار/إخفاء القوائم الفرعية
-    function toggleSubmenu(element) {
-        element.classList.toggle('open');
-        const submenu = element.querySelector('.submenu');
-        submenu.classList.toggle('open');
-    }
+    // ثم تحميل الطلاب
+    await loadStudents();
 
-    // تحميل البيانات عند فتح الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        // تحميل حلقات القرآن أولاً
-        loadCircles().then(() => {
-            // ثم تحميل الطلاب
-            loadStudents();
-        });
-
-        // إعداد التبويبات
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', function() {
-                // إزالة النشاط من جميع الأزرار
-                document.querySelectorAll('.tab-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-
-                // إخفاء جميع محتويات التبويبات
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                // إضافة النشاط للزر المحدد وإظهار المحتوى المناسب
-                this.classList.add('active');
-                document.getElementById(this.dataset.tab).classList.add('active');
+    // إعداد التبويبات
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
             });
-        });
-
-        // إعداد بحث الطلاب
-        document.getElementById('search-btn').addEventListener('click', function() {
-            const searchTerm = document.getElementById('search-input').value;
-            const circleId = document.getElementById('circle-filter').value;
-            loadStudents(circleId, searchTerm);
-        });
-
-        // عند تغيير الطالب في إدارة النقاط
-        document.getElementById('student-select').addEventListener('change', function() {
-            if (this.value) {
-                loadPointsHistory(this.value);
-            } else {
-                document.getElementById("points-history-container").innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-history text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">اختر طالباً لعرض سجل النقاط</p>
-                    </div>`;
-            }
-        });
-
-        // تعطيل الانتقال إلى الروابط في القوائم التي تحتوي على قوائم فرعية
-        document.querySelectorAll('.has-submenu > a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
             });
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
         });
     });
-    </script>
+
+    // إعداد بحث الطلاب
+    document.getElementById('search-btn').addEventListener('click', function() {
+        const searchTerm = document.getElementById('search-input').value;
+        const circleId = document.getElementById('circle-filter').value;
+        loadStudents(circleId, searchTerm);
+    });
+
+    // عند تغيير الطالب في إدارة النقاط
+    document.getElementById('student-select').addEventListener('change', function() {
+        if (this.value) {
+            loadPointsHistory(this.value);
+        } else {
+            document.getElementById("points-history-container").innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">اختر طالباً لعرض سجل النقاط</p>
+                </div>`;
+        }
+    });
+
+    // تعطيل الانتقال إلى الروابط في القوائم التي تحتوي على قوائم فرعية
+    document.querySelectorAll('.has-submenu > a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+});
+</script>
 </body>
 </html>

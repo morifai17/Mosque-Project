@@ -293,7 +293,7 @@
                     <!-- نموذج تسجيل الدخول للطالب -->
                     <form x-show="currentForm === 'student'" @submit.prevent="studentLogin()" class="space-y-6">
                         <div>
-                            <label for="student_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">اسم المستخدم</label>
+                            <label for="student_phone_number" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">اسم المستخدم</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z_10">
                                     <i class="fas fa-user text-golden-500"></i>
@@ -350,39 +350,39 @@
                         </button>
                     </form>
 
-                    <!-- نموذج تسجيل الدخول للمعلم -->
-                    <form x-show="currentForm === 'teacher'" @submit.prevent="teacherLogin()" class="space-y-6">
-                    <div>
-    <label for="teacher_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">اسم الاستاذ</label>
-    <div class="relative">
-        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
-            <i class="fas fa-user text-golden-500"></i>
+               <!-- نموذج تسجيل الدخول للمعلم -->
+<form x-show="currentForm === 'teacher'" @submit.prevent="teacherLogin()" class="space-y-6">
+    <div>
+        <label for="teacher_phone_number" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">رقم الهاتف</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
+                <i class="fas fa-phone text-golden-500"></i> <!-- تغيير الأيقونة إلى هاتف -->
+            </div>
+            <input
+                type="text"
+                id="teacher_phone_number"
+                x-model="teacherData.phone_number"
+                required
+                class="w-full pl-12 pr-10 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-all duration-300"
+                placeholder="أدخل رقم الهاتف">
         </div>
-        <input
-            type="text"
-            id="teacher_name"
-            x-model="teacherData.teacher_name"
-            required
-            class="w-full pl-12 pr-10 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-all duration-300"
-            placeholder="أدخل اسم الاستاذ">
     </div>
-</div>
 
-                        <div>
-                            <label for="teacher_password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">كلمة المرور</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
-                                    <i class="fas fa-lock text-golden-500"></i>
-                                </div>
-                                <input
-                                    type="password"
-                                    id="teacher_password"
-                                    x-model="teacherData.password"
-                                    required
-                                    class="w-full pl-12 pr-10 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-all duration-300"
-                                    placeholder="   أدخل كلمة المرور">
-                            </div>
-                        </div>
+    <div>
+        <label for="teacher_password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">كلمة المرور</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
+                <i class="fas fa-lock text-golden-500"></i>
+            </div>
+            <input
+                type="password"
+                id="teacher_password"
+                x-model="teacherData.password"
+                required
+                class="w-full pl-12 pr-10 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-all duration-300"
+                placeholder="أدخل كلمة المرور">
+        </div>
+    </div>
 
                         <div class="flex items-center justify-between">
                             <label class="flex items-center cursor-pointer">
@@ -551,7 +551,7 @@
                     </button>
                 </form>
 
-                <!-- نموذج تسجيل المعلم -->
+                  <!-- نموذج تسجيل المعلم (المعدل) -->
                 <form x-show="registerType === 'teacher'" @submit.prevent="registerTeacher()" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -569,13 +569,32 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">رقم الهاتف</label>
                         <input type="text" x-model="registerTeacherData.phone_number" required
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition"
+                               placeholder="يجب أن يكون مسجلاً مسبقاً في قائمة المعلمين">
+                    </div>
+
+                    <!-- حقل الكود المضاف -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">الكود</label>
+                        <input type="text" x-model="registerTeacherData.code" required
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition"
+                               placeholder="أدخل الكود المخصص لك">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">يجب أن يتطابق مع الكود المسجل في قائمة المعلمين</p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">كلمة المرور</label>
                         <input type="password" x-model="registerTeacherData.password" required
                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
+                    </div>
+
+                    <!-- حقل الصورة الشخصية (اختياري) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">الصورة الشخصية (اختياري)</label>
+                        <input type="file" id="teacher_avatar" @change="handleTeacherAvatar"
+                               accept="image/jpg,image/jpeg,image/png"
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">الصيغ المسموحة: JPG, JPEG, PNG</p>
                     </div>
 
                     <button
@@ -592,128 +611,126 @@
         </div>
     </div>
 
-    <script>
-        function loginPage() {
-            return {
-                currentForm: 'student',
-                isDark: localStorage.getItem('darkMode') === 'true',
-                loading: false,
-                showRegisterModal: false,
-                registerType: 'student',
-                teachers: [],
+   <script>
+    function loginPage() {
+        return {
+            currentForm: 'student',
+            isDark: localStorage.getItem('darkMode') === 'true',
+            loading: false,
+            showRegisterModal: false,
+            registerType: 'student',
+            teachers: [],
 
-                // بيانات تسجيل الدخول
-                studentData: {
-                    student_name: '',
-                    password: ''
-                },
-                teacherData: {
-                    phone_number: '',
-                    password: ''
-                },
+       // بيانات تسجيل الدخول
+studentData: {
+    student_name: '',
+    password: ''
+},
+teacherData: {
+    phone_number: '', // سيتم استخدام رقم الهاتف للتسجيل
+    password: ''
+},
+            // بيانات تسجيل الحساب
+            registerStudentData: {
+                teacher_id: '',
+                first_name: '',
+                last_name: '',
+                student_name: '',
+                phone_number: '',
+                age: '',
+                password: ''
+            },
+            registerTeacherData: {
+                first_name: '',
+                last_name: '',
+                phone_number: '',
+                code: '',
+                password: '',
+                avatar: null
+            },
 
-                // بيانات تسجيل الحساب
-                registerStudentData: {
-                    teacher_id: '',
-                    first_name: '',
-                    last_name: '',
-                    student_name: '',
-                    phone_number: '',
-                    age: '',
-                    password: ''
-                },
-                registerTeacherData: {
-                    first_name: '',
-                    last_name: '',
-                    phone_number: '',
-                    password: ''
-                },
+            init() {
+                // تطبيق وضع التصميم عند التحميل
+                this.toggleDarkMode(this.isDark);
 
-                init() {
-                    // تطبيق وضع التصميم عند التحميل
-                    this.toggleDarkMode(this.isDark);
-
-                    // جلب قائمة المعلمين عند فتح نافذة التسجيل
-                    this.$watch('showRegisterModal', (value) => {
-                        if (value && this.registerType === 'student') {
-                            this.fetchTeachers();
-                        }
-                    });
-
-                    // عند تغيير نوع التسجيل، جلب المعلمين إذا كان طالباً
-                    this.$watch('registerType', (value) => {
-                        if (value === 'student') {
-                            this.fetchTeachers();
-                        }
-                    });
-                },
-
-                toggleDarkMode(value = null) {
-                    if (value === null) {
-                        this.isDark = !this.isDark;
-                    } else {
-                        this.isDark = value;
+                // جلب قائمة المعلمين عند فتح نافذة التسجيل
+                this.$watch('showRegisterModal', (value) => {
+                    if (value && this.registerType === 'student') {
+                        this.fetchTeachers();
                     }
+                });
 
-                    if (this.isDark) {
-                        document.documentElement.classList.add('dark');
-                        localStorage.setItem('darkMode', 'true');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                        localStorage.setItem('darkMode', 'false');
+                // عند تغيير نوع التسجيل، جلب المعلمين إذا كان طالباً
+                this.$watch('registerType', (value) => {
+                    if (value === 'student') {
+                        this.fetchTeachers();
                     }
-                },
+                });
+            },
 
-                async fetchTeachers() {
-                    try {
-                        const response = await fetch('/api/teachers');
-                        const data = await response.json();
+            toggleDarkMode(value = null) {
+                if (value === null) {
+                    this.isDark = !this.isDark;
+                } else {
+                    this.isDark = value;
+                }
 
-                        if (data.success) {
-                            this.teachers = data.teachers;
-                        }
-                    } catch (error) {
-                        console.error('Error fetching teachers:', error);
-                        this.showNotification('حدث خطأ أثناء جلب بيانات المعلمين', 'error');
-                    }
-                },
+                if (this.isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('darkMode', 'false');
+                }
+            },
 
-                async studentLogin() {
-                    this.loading = true;
+async fetchTeachers() {
+    try {
+        console.log('=== بدء جلب المعلمين ===');
 
-                    try {
-                        const response = await fetch('/api/student/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify(this.studentData)
-                        });
+        const response = await fetch('/api/teacher/teachers');
+        console.log('حالة HTTP:', response.status, response.statusText);
 
-                        const data = await response.json();
+        // تحقق من نوع المحتوى
+        const contentType = response.headers.get('content-type');
+        console.log('نوع المحتوى:', contentType);
 
-                        if (data.success) {
-                            localStorage.setItem('token', data.token);
-                            localStorage.setItem('user', JSON.stringify(data.student));
-                            this.showNotification('تم تسجيل الدخول بنجاح', 'success');
+        const responseText = await response.text();
+        console.log('النص الكامل للرد:', responseText);
 
-                            // توجيه إلى لوحة تحكم الطالب
-                            setTimeout(() => {
-                                window.location.href = '/student/dashboard';
-                            }, 1000);
-                        } else {
-                            this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        this.showNotification('حدث خطأ أثناء تسجيل الدخول', 'error');
-                    }
+        if (!response.ok) {
+            throw new Error(`خطأ HTTP: ${response.status} ${response.statusText}`);
+        }
 
-                    this.loading = false;
-                },
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('الخادم لم يرجع JSON');
+        }
 
-             async teacherLogin() {
+        const data = JSON.parse(responseText);
+        console.log('البيانات بعد التحليل:', data);
+
+        if (data.success) {
+            this.teachers = data.teachers;
+            const count = data.count || data.teachers.length;
+            this.showNotification(`تم تحميل ${count} معلم بنجاح`, 'success');
+        } else {
+            throw new Error(data.message || 'الخادم رجع success: false');
+        }
+
+    } catch (error) {
+        console.error('❌ تفاصيل الخطأ الكاملة:', error);
+        this.showNotification('خطأ في جلب بيانات المعلمين', 'error');
+        this.teachers = [];
+
+        // بيانات تجريبية للاستمرار
+        this.teachers = [
+            { id: 1, first_name: 'أحمد', last_name: 'محمد' },
+            { id: 2, first_name: 'محمد', last_name: 'علي' }
+        ];
+    }
+},
+
+        async teacherLogin() {
     this.loading = true;
 
     try {
@@ -731,12 +748,14 @@
         if (data.success) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.teacher));
-            localStorage.setItem('user_type', 'teacher'); // إضافة نوع المستخدم
+            localStorage.setItem('user_type', 'teacher');
             this.showNotification('تم تسجيل الدخول بنجاح', 'success');
 
             // التوجيه إلى الصفحة الرئيسية
             setTimeout(() => {
-                window.location.href = "{{ route('home') }}";
+               localStorage.setItem("auth_token", data.token);
+window.location.href = "products.html";
+
             }, 1000);
         } else {
             this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
@@ -749,144 +768,247 @@
     this.loading = false;
 },
 
-                async registerStudent() {
-                    this.loading = true;
+//          async teacherLogin() {
+//     this.loading = true;
 
-                    try {
-                        const formData = new FormData();
-                        for (const key in this.registerStudentData) {
-                            formData.append(key, this.registerStudentData[key]);
-                        }
+//     try {
+//         const response = await fetch('/api/teacher/login', {
+//             method: 'POST', // تأكد أنه POST
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+//                 'Accept': 'application/json'
+//             },
+//             body: JSON.stringify(this.teacherData)
+//         });
 
-                        const response = await fetch('/api/student/register', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: formData
-                        });
+//         // تحقق من نوع المحتوى
+//         const contentType = response.headers.get('content-type');
+//         console.log('نوع المحتوى:', contentType);
 
-                        const data = await response.json();
+//         if (!contentType || !contentType.includes('application/json')) {
+//             const text = await response.text();
+//             console.log('الرد غير JSON:', text.substring(0, 200));
+//             throw new Error('الخادم أرجع HTML بدلاً من JSON - تأكد من الـ route');
+//         }
 
-                        if (data.success) {
-                            this.showNotification('تم إنشاء حساب الطالب بنجاح', 'success');
-                            this.showRegisterModal = false;
-                            this.currentForm = 'student';
+//         const data = await response.json();
+//         console.log('بيانات الرد:', data);
 
-                            // تعبئة بيانات الدخول تلقائياً
-                            this.studentData.student_name = this.registerStudentData.student_name;
-                            this.studentData.password = this.registerStudentData.password;
+//         if (data.success) {
+//             localStorage.setItem('token', data.token);
+//             localStorage.setItem('user', JSON.stringify(data.teacher));
+//             localStorage.setItem('user_type', 'teacher');
+//             this.showNotification('تم تسجيل الدخول بنجاح', 'success');
 
-                            // تفريغ نموذج التسجيل
-                            this.registerStudentData = {
-                                teacher_id: '',
-                                first_name: '',
-                                last_name: '',
-                                student_name: '',
-                                phone_number: '',
-                                age: '',
-                                password: ''
-                            };
-                        } else {
-                            this.showNotification(data.message || 'خطأ في إنشاء الحساب', 'error');
-                        }
-                    } catch (error) {
-                        console.error('Registration error:', error);
-                        this.showNotification('حدث خطأ أثناء إنشاء الحساب', 'error');
+//             setTimeout(() => {
+//                 window.location.href = '/teacher/dashboard';
+//             }, 1000);
+//         } else {
+//             this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
+//         }
+//     } catch (error) {
+//         console.error('تفاصيل الخطأ:', error);
+//         this.showNotification('خطأ في الاتصال: ' + error.message, 'error');
+//     }
+
+//     this.loading = false;
+// },
+
+          async registerStudent() {
+    this.loading = true;
+
+    try {
+        const formData = new FormData();
+        for (const key in this.registerStudentData) {
+            formData.append(key, this.registerStudentData[key]);
+        }
+
+        const response = await fetch('/api/student/register', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            this.showNotification('تم إنشاء حساب الطالب بنجاح', 'success');
+            this.showRegisterModal = false;
+
+            // تسجيل الدخول تلقائياً بعد التسجيل
+            this.studentData.student_name = this.registerStudentData.student_name;
+            this.studentData.password = this.registerStudentData.password;
+
+            // انتظار قليل ثم تسجيل الدخول
+              setTimeout(() => {
+                console.log('🔄 جاري التوجيه إلى الصفحة الرئيسية...'); // 🔍 اضف هذا
+                window.location.href = '/';
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        this.showNotification('حدث خطأ أثناء تسجيل الدخول', 'error');
+    }
+
+    this.loading = false;
+},
+async studentLogin() {
+    this.loading = true;
+    try {
+        const response = await fetch('/api/student/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(this.studentData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // استخدم auth_token بدلاً من token
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.student));
+            localStorage.setItem('user_type', 'student');
+            this.showNotification('تم تسجيل الدخول بنجاح', 'success');
+
+            // تأكد من المسار الصحيح
+            setTimeout(() => {
+                window.location.href = '/products'; // تأكد من هذا المسار
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        this.showNotification('حدث خطأ أثناء تسجيل الدخول', 'error');
+    }
+    this.loading = false;
+},
+
+            // دالة التعامل مع رفع الصورة الشخصية للمعلم
+            handleTeacherAvatar(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // التحقق من نوع الملف
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    if (!validTypes.includes(file.type)) {
+                        this.showNotification('نوع الملف غير مسموح. المسموح: JPG, JPEG, PNG', 'error');
+                        event.target.value = '';
+                        this.registerTeacherData.avatar = null;
+                        return;
                     }
 
-                    this.loading = false;
-                },
-
-                async registerTeacher() {
-                    this.loading = true;
-
-                    try {
-                        // أولاً: احصل على CSRF token من الكوكيز
-                        await fetch('/sanctum/csrf-cookie', {
-                            method: 'GET',
-                            credentials: 'include'
-                        });
-
-                        // ثانياً: أرسل request التسجيل
-                        const response = await fetch('/api/teacher/register', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify(this.registerTeacherData)
-                        });
-
-                        console.log('Status:', response.status);
-                        const text = await response.text();
-                        console.log('Raw response:', text);
-
-                        let data;
-                        try {
-                            data = JSON.parse(text);
-                        } catch (e) {
-                            console.error('JSON parse error:', e);
-                            throw new Error('Invalid JSON response');
-                        }
-
-                        if (data.success) {
-                            this.showNotification('تم إنشاء حساب المعلم بنجاح', 'success');
-                            this.showRegisterModal = false;
-
-                            // تعبئة بيانات الدخول تلقائياً باستخدام phone_number
-                            this.teacherData.phone_number = this.registerTeacherData.phone_number;
-                            this.teacherData.password = this.registerTeacherData.password;
-
-                            // تفريغ نموذج التسجيل
-                            this.registerTeacherData = {
-                                first_name: '',
-                                last_name: '',
-                                phone_number: '',
-                                password: ''
-                            };
-                        } else {
-                            this.showNotification(data.message || 'خطأ في إنشاء الحساب', 'error');
-                        }
-                    } catch (error) {
-                        console.error('Registration error:', error);
-                        this.showNotification(error.message || 'حدث خطأ أثناء إنشاء الحساب', 'error');
+                    // التحقق من حجم الملف (5MB كحد أقصى)
+                    if (file.size > 5 * 1024 * 1024) {
+                        this.showNotification('حجم الملف كبير جداً. الحد الأقصى 5MB', 'error');
+                        event.target.value = '';
+                        this.registerTeacherData.avatar = null;
+                        return;
                     }
 
-                    this.loading = false;
-                },
-
-                showNotification(message, type = 'info') {
-                    // إنشاء عنصر الإشعار
-                    const notification = document.createElement('div');
-                    notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white font-medium transition transform duration-300 ${
-                        type === 'success' ? 'bg-green-500' :
-                        type === 'error' ? 'bg-red-500' :
-                        'bg-blue-500'
-                    }`;
-                    notification.textContent = message;
-                    notification.style.transform = 'translateX(100%)';
-
-                    // إضافة الإشعار إلى الصفحة
-                    document.body.appendChild(notification);
-
-                    // إظهار الإشعار
-                    setTimeout(() => {
-                        notification.style.transform = 'translateX(0)';
-                    }, 10);
-
-                    // إخفاء الإشعار بعد 3 ثوان
-                    setTimeout(() => {
-                        notification.style.transform = 'translateX(100%)';
-                        setTimeout(() => {
-                            document.body.removeChild(notification);
-                        }, 300);
-                    }, 3000);
+                    this.registerTeacherData.avatar = file;
+                    this.showNotification('تم اختيار الصورة بنجاح', 'success');
+                } else {
+                    this.registerTeacherData.avatar = null;
                 }
+            }, // تم إضافة القوس هنا
+
+         async registerTeacher() {
+    this.loading = true;
+
+    try {
+        // إنشاء FormData
+        const formData = new FormData();
+        formData.append('first_name', this.registerTeacherData.first_name);
+        formData.append('last_name', this.registerTeacherData.last_name);
+        formData.append('phone_number', this.registerTeacherData.phone_number);
+        formData.append('code', this.registerTeacherData.code);
+        formData.append('password', this.registerTeacherData.password);
+
+        if (this.registerTeacherData.avatar) {
+            formData.append('avatar', this.registerTeacherData.avatar);
+        }
+
+        // الحصول على CSRF token
+        await fetch('/sanctum/csrf-cookie', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        // إرسال الطلب
+        const response = await fetch('/api/teacher/register', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            this.showNotification('تم إنشاء حساب المعلم بنجاح', 'success');
+            this.showRegisterModal = false;
+
+            // تسجيل الدخول تلقائياً بعد التسجيل
+            this.teacherData.phone_number = this.registerTeacherData.phone_number;
+            this.teacherData.password = this.registerTeacherData.password;
+
+            // انتظار قليل ثم تسجيل الدخول
+              setTimeout(() => {
+                console.log('🔄 جاري التوجيه إلى الصفحة الرئيسية...'); // 🔍 اضف هذا
+                window.location.href = '/';
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'خطأ في تسجيل الدخول', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        this.showNotification('حدث خطأ أثناء تسجيل الدخول', 'error');
+    }
+
+    this.loading = false;
+},
+
+            showNotification(message, type = 'info') {
+                // إنشاء عنصر الإشعار
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white font-medium transition transform duration-300 ${
+                    type === 'success' ? 'bg-green-500' :
+                    type === 'error' ? 'bg-red-500' :
+                    'bg-blue-500'
+                }`;
+                notification.textContent = message;
+                notification.style.transform = 'translateX(100%)';
+
+                // إضافة الإشعار إلى الصفحة
+                document.body.appendChild(notification);
+
+                // إظهار الإشعار
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 10);
+
+                // إخفاء الإشعار بعد 3 ثوان
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
             }
         }
-    </script>
+    }
+
+</script>
 </body>
 </html>

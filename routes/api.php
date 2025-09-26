@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/products/getProducts', [ProductController::class, 'getProducts']);
 
 
 // ----------------- AdminAuth -----------------
@@ -52,7 +53,8 @@ Route::prefix('admin')->group(function () {
 // ----------------- مسارات Teacher -----------------
 Route::prefix('teacher')->group(function () {
     Route::post('/register', [TeacherAuthController::class, 'register']);
-    Route::get('/login', [TeacherAuthController::class, 'login']);
+    Route::post('/login', [TeacherAuthController::class, 'login']);
+    Route::get('/teachers', [TeacherAuthController::class, 'getTeachers']);
 
     Route::middleware('auth:teacher')->group(function () {
         Route::get('/profile', [TeacherAuthController::class, 'profile']);
@@ -70,7 +72,7 @@ Route::prefix('teacher')->group(function () {
     Route::get('/getStudents', [TeacherDashboardController::class, 'getStudents']);
     Route::post('/updateStudentPoints', [TeacherDashboardController::class, 'updateStudentPoints']);
     Route::get('/myStudentsPoints', [TeacherDashboardController::class, 'myStudentsPoints']);
-
+    Route::get('/getTeacherCircles', [TeacherDashboardController::class, 'getTeacherCircles']);
 });
 
 
