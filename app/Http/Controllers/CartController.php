@@ -11,7 +11,7 @@ class CartController extends Controller
 {
     public function add(Request $request)
 {
-    $student = Auth::guard('student')->user(); // ✅ الطالب من التوكن
+    $student = Auth::guard(name: 'student')->user(); // ✅ الطالب من التوكن
 
     if (!$student) {
         return response()->json([

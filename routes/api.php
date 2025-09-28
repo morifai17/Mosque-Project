@@ -10,6 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductDashboardController;
 use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -116,4 +117,14 @@ Route::prefix('dashboard/coupons')->group(function () {
     Route::get('/index', [CouponDashboardController::class, 'index']);       // عرض كوبون محدد
     Route::put('/update/{id}', [CouponDashboardController::class, 'update']);   // تحديث كوبون
     Route::delete('/destroy/{id}', [CouponDashboardController::class, 'destroy']); // حذف كوبون
+});
+
+
+// ----------------- Order -----------------
+Route::prefix('order')->group(function () {
+    Route::post('/save', [OrderController::class, 'save']);
+    Route::get('/cancel', [OrderController::class, 'cancel']);
+    Route::get('/myOrders', [OrderController::class, 'myOrders']);
+    Route::post('/updateOrderStatus', [OrderController::class, 'updateOrderStatus']);
+
 });
