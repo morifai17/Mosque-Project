@@ -571,15 +571,17 @@
 
                 productCard.innerHTML = `
                     <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden relative">
-                        ${product.image ?
-                            `<img src="/storage/products/${product.image}"
-     alt="${product.title || product.name}"
-     class="w-full h-full object-cover">
-` :
-                            `<div class="w-full h-full flex items-center justify-center text-primary-500 dark:text-golden-400">
-                                <i class="fas fa-image text-4xl"></i>
-                            </div>`
-                        }
+${product.image ?
+// استبدل الكود بهذا:
+`<img src="http://127.0.0.1:8000/storage/products/${product.image}"
+      alt="${product.title || product.name}"
+      class="w-full h-full object-cover"
+      onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJUYWphd2FsLCBBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtin2YTZhdmG2KfYqiDZhNmE2YLYp9ix2Kkg2KfZhNiv2LnYryDZhdit2KfZgtiMINin2YTYudmK2LLYrTwvdGV4dD48L3N2Zz4='">` :
+    `<div class="w-full h-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 text-primary-500 dark:text-golden-400">
+        <i class="fas fa-image text-4xl mb-2"></i>
+        <span class="text-sm">لا توجد صورة</span>
+     </div>`
+}
                         ${stock === 0 ? '<span class="product-badge bg-red-500 text-white">نفذت الكمية</span>' :
                             (stock < 5 ? '<span class="product-badge bg-orange-500 text-white">كمية محدودة</span>' : '')
                         }

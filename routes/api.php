@@ -8,9 +8,9 @@ use App\Http\Controllers\TeacherAuthController;
 use App\Http\Controllers\StudentAuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductDashboardController;
 use App\Http\Controllers\TeacherDashboardController;
-use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -95,8 +95,6 @@ Route::prefix('cart')->group(function () {
     Route::get('/get', [CartController::class, 'get']);
 
 });
-
-
 // ----------------- مسارات Dashboard للـ Products -----------------
 Route::prefix('dashboard/products')->group(function () {
     Route::get('/index', [ProductDashboardController::class, 'index']);
@@ -118,7 +116,6 @@ Route::prefix('dashboard/coupons')->group(function () {
     Route::put('/update/{id}', [CouponDashboardController::class, 'update']);   // تحديث كوبون
     Route::delete('/destroy/{id}', [CouponDashboardController::class, 'destroy']); // حذف كوبون
 });
-
 
 // ----------------- Order -----------------
 Route::prefix('order')->group(function () {
