@@ -123,5 +123,6 @@ Route::prefix('order')->group(function () {
     Route::get('/cancel', [OrderController::class, 'cancel']);
     Route::get('/myOrders', [OrderController::class, 'myOrders']);
     Route::post('/updateOrderStatus', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/getOrders', [OrderController::class, 'getOrders']);
 
 });

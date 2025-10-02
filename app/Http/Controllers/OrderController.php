@@ -257,4 +257,29 @@ public function updateOrderStatus(Request $request)
     ]);
 }
 
+
+public function getOrders(Request $request)
+{
+    $request->validate([
+        'student_id' => 'sometimes|exists:students,id',
+    ]);
+
+    $query = Order::with([
+        'student:id,student_name',   // only id + student_name
+        'products:id,title'
+    ]);
+
+    if ($request->filled('student_id')) {
+        $query->where('student_id', $request->student_id);
+    }
+
+    $orders = $query->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $orders
+    ]);
+}
+
+
 }
