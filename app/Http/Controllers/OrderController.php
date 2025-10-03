@@ -139,7 +139,7 @@ public function myOrders()
     $student = Auth::guard('student')->user(); // الطالب من التوكن
 
     $orders = Order::where('student_id', $student->id)
-        ->with(['products', 'latestStatus', 'coupon']) 
+        ->with(['products', 'latestStatus', 'coupon'])
         ->orderBy('created_at', 'desc')
         ->get()
         ->map(function ($order) {

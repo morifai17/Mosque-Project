@@ -66,15 +66,15 @@ Route::prefix('teacher')->group(function () {
 });
 
 
-//---------------------Teacher Dashboard-----------------------------
 Route::prefix('teacher')->group(function () {
     Route::post('/addStudent', [TeacherDashboardController::class, 'addStudent']);
-    Route::get('/deleteStudent', [TeacherDashboardController::class, 'deleteStudent']);
+    Route::put('/updateStudentPoints', [TeacherDashboardController::class, 'updateStudentPoints']);
+    Route::delete('/deleteStudent', [TeacherDashboardController::class, 'deleteStudent']);
     Route::get('/getStudents', [TeacherDashboardController::class, 'getStudents']);
-    Route::post('/updateStudentPoints', [TeacherDashboardController::class, 'updateStudentPoints']);
     Route::get('/myStudentsPoints', [TeacherDashboardController::class, 'myStudentsPoints']);
     Route::get('/getTeacherCircles', [TeacherDashboardController::class, 'getTeacherCircles']);
 });
+
 
 
 //----------------------Student Auth ---------------------------------
@@ -124,5 +124,6 @@ Route::prefix('order')->group(function () {
     Route::get('/myOrders', [OrderController::class, 'myOrders']);
     Route::post('/updateOrderStatus', [OrderController::class, 'updateOrderStatus']);
     Route::get('/getOrders', [OrderController::class, 'getOrders']);
+
 
 });

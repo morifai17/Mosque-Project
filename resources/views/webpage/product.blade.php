@@ -279,15 +279,29 @@
                                 <div x-show="cartItems.length === 0" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
                                     السلة فارغة
                                 </div>
+                            <!-- في قائمة السلة، قبل المجموع -->
+<div class="px-4 py-2 border-b dark:border-gray-700">
+    <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600 dark:text-gray-300">رصيد النقاط:</span>
+        <span class="text-sm font-bold text-green-600 dark:text-green-400" x-text="formatPrice(studentPoints)"></span>
+    </div>
+</div>
                             </div>
                             <div class="p-3 border-t dark:border-gray-700">
                                 <div class="flex justify-between mb-2">
                                     <span class="font-semibold">المجموع:</span>
                                     <span class="font-bold text-primary-600 dark:text-golden-400" x-text="formatPrice(cartTotal)"></span>
                                 </div>
-                                <button class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-semibold transition">
-                                    اتمام الطلب
-                                </button>
+                           <button
+        class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="cartItems.length === 0"
+        @click="completeOrder()">
+        <span x-show="!processingOrder">اتمام الطلب</span>
+        <span x-show="processingOrder" class="flex items-center justify-center">
+            <i class="fas fa-spinner fa-spin ml-2"></i>
+            جاري المعالجة...
+        </span>
+    </button>
                             </div>
                         </div>
                     </div>
@@ -382,6 +396,7 @@
         // حالة التطبيق
         const API_URL = 'http://127.0.0.1:8000/api/products/getProducts';
         const CART_API_URL = 'http://127.0.0.1:8000/api/cart';
+        const ORDER_API_URL = 'http://127.0.0.1:8000/api/order/save';
 
         // تهيئة التطبيق
         function init() {
@@ -416,52 +431,76 @@
             }
         }
 
-        // جلب محتويات السلة
-        async function fetchCart() {
-            const token = getAuthToken();
-            if (!token) return;
+     // جلب محتويات السلة - محسنة
+async function fetchCart() {
+    const token = getAuthToken();
+    if (!token) return;
 
-            try {
-                console.log('Fetching cart with token:', token.substring(0, 20) + '...');
+    try {
+        console.log('جلب محتويات السلة من الخادم...');
 
-                const response = await fetch(`${CART_API_URL}/get`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include' // إذا كنت تستخدم sessions
-                });
+        const response = await fetch(`${CART_API_URL}/get`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
 
-                console.log('Cart response status:', response.status);
+        console.log('حالة استجابة السلة:', response.status);
 
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        showToast('جلسة العمل منتهية، يرجى تسجيل الدخول مرة أخرى', 'error');
-                        localStorage.removeItem('auth_token');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 2000);
-                        return;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Cart data received:', data);
-
-                if (data.success) {
-                    updateCartUI(data.cart_items || data.items || [], data.cart_total || data.total || 0);
-                } else {
-                    console.warn('API returned success: false', data);
-                    updateCartUI([], 0);
-                }
-            } catch (error) {
-                console.error('خطأ في جلب السلة:', error);
-                showToast('خطأ في تحميل سلة التسوق', 'error');
+        if (!response.ok) {
+            if (response.status === 401) {
+                showToast('جلسة العمل منتهية، يرجى تسجيل الدخول مرة أخرى', 'error');
+                localStorage.removeItem('auth_token');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+                return;
             }
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('بيانات السلة الكاملة من الخادم:', data);
+
+        // معالجة مختلف أشكال البيانات
+        let cartItems = [];
+        let cartTotal = 0;
+
+        if (data.cart_items) {
+            cartItems = data.cart_items;
+        } else if (data.items) {
+            cartItems = data.items;
+        } else if (data.data && data.data.items) {
+            cartItems = data.data.items;
+        }
+
+        if (data.cart_total !== undefined) {
+            cartTotal = data.cart_total;
+        } else if (data.total !== undefined) {
+            cartTotal = data.total;
+        } else if (data.data && data.data.total !== undefined) {
+            cartTotal = data.data.total;
+        } else {
+            // حساب الإجمالي يدوياً إذا لم يكن موجوداً
+            cartTotal = cartItems.reduce((sum, item) => {
+                return sum + (item.total_item_price || (item.quantity * item.unit_price) || 0);
+            }, 0);
+        }
+
+        console.log('المنتجات المستخرجة:', cartItems);
+        console.log('الإجمالي المستخرج:', cartTotal);
+
+        updateCartUI(cartItems, cartTotal);
+
+    } catch (error) {
+        console.error('خطأ في جلب السلة:', error);
+        showToast('خطأ في تحميل سلة التسوق', 'error');
+    }
+}
 
         // إضافة منتج إلى السلة
    async function addToCart(productId, productName, quantity = 1) {
@@ -538,6 +577,118 @@
     } catch (error) {
         showToast('خطأ في الاتصال بالخادم', 'error');
         console.error('خطأ في إزالة المنتج من السلة:', error);
+    }
+}
+
+   // إتمام الطلب - مع معالجة نقص النقاط
+
+async function completeOrder() {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+        // أولاً، نجلب أحدث بيانات السلة والنقاط
+        await fetchCart();
+
+        // ننتظر قليلاً لضمان تحديث البيانات
+        setTimeout(async () => {
+            console.log('محتويات السلة:', window.cartItems);
+            console.log('إجمالي الطلب:', window.cartTotal);
+
+            if (window.cartItems.length === 0) {
+                showToast('السلة فارغة، أضف منتجات أولاً', 'warning');
+                return;
+            }
+
+            // نجلب رصيد النقاط الحالي للطالب
+            const points = await getStudentPoints();
+            console.log('رصيد النقاط الحالي:', points);
+            console.log('إجمالي الطلب المطلوب:', window.cartTotal);
+
+            if (points < window.cartTotal) {
+                const missingPoints = window.cartTotal - points;
+                showToast(`نقاطك غير كافية! تحتاج ${missingPoints} نقطة إضافية`, 'error');
+
+                // عرض خيارات للمستخدم
+                setTimeout(() => {
+                    if (confirm(`رصيدك: ${points} نقطة\nإجمالي الطلب: ${window.cartTotal} نقطة\n\nهل تريد:\n1- إزالة بعض المنتجات\n2- شحن النقاط\n3- الإلغاء`)) {
+                        // يمكن توجيه المستخدم لصفحة شحن النقاط
+                        window.location.href = '/wallet';
+                    }
+                }, 1000);
+                return;
+            }
+
+            showToast('جاري معالجة الطلب...', 'warning');
+
+            const response = await fetch(ORDER_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    coupon_code: null
+                })
+            });
+
+            const data = await response.json();
+            console.log('استجابة الطلب:', data);
+
+            if (!response.ok) {
+                throw new Error(data.message || 'فشل في إتمام الطلب');
+            }
+
+            if (data.success) {
+                showToast(`تم إنشاء الطلب بنجاح! رقم الطلب: #${data.order_id}`, 'success');
+
+                // تحديث واجهة المستخدم بعد نجاح الطلب
+                updateCartUI([], 0);
+                window.cartOpen = false;
+
+                // إعادة تحميل السلة والتحديث
+                setTimeout(() => {
+                    fetchCart();
+                    // يمكن إعادة تحميل الصفحة لتحديث البيانات بالكامل
+                    // window.location.reload();
+                }, 2000);
+
+            } else {
+                throw new Error(data.message || 'فشل في إتمام الطلب');
+            }
+        }, 500);
+
+    } catch (error) {
+        console.error('خطأ في إتمام الطلب:', error);
+        showToast(`خطأ: ${error.message}`, 'error');
+    }
+}
+
+// دالة لجلب رصيد النقاط
+async function getStudentPoints() {
+    const token = getAuthToken();
+    if (!token) return 0;
+
+    try {
+        // افترض أن لديك endpoint لجلب بيانات الطالب
+        const response = await fetch('http://127.0.0.1:8000/api/student/profile', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.points || data.student?.points || 0;
+        }
+        return 0;
+    } catch (error) {
+        console.error('خطأ في جلب رصيد النقاط:', error);
+        return 0;
     }
 }
   function displayProducts(products) {
@@ -813,46 +964,84 @@ ${product.image ?
 
 
         // تحديث واجهة السلة
-        function updateCartUI(items, total) {
-            try {
-                // الطريقة الآمنة للوصول إلى Alpine store
-                if (window.Alpine && Alpine.store('cart')) {
-                    Alpine.store('cart').items = items || [];
-                    Alpine.store('cart').total = total || 0;
-                } else {
-                    console.warn('Alpine store not available, using fallback');
-                    // استخدم متغيرات بديلة
-                    window.cartItems = items || [];
-                    window.cartTotal = total || 0;
-                }
-            } catch (error) {
-                console.error('Error updating cart UI:', error);
-            }
+
+function updateCartUI(items, total) {
+    console.log('تحديث واجهة السلة:', items, total);
+
+    try {
+        // تحديث المتغيرات العالمية
+        window.cartItems = Array.isArray(items) ? items : [];
+        window.cartTotal = typeof total === 'number' ? total : 0;
+
+        // تحديث Alpine store إذا كان متاحاً
+        if (window.Alpine && Alpine.store('cart')) {
+            Alpine.store('cart').items = window.cartItems;
+            Alpine.store('cart').total = window.cartTotal;
         }
 
+        // إجبار إعادة render للعناصر التي تعتمد على هذه البيانات
+        setTimeout(() => {
+            if (window.Alpine && Alpine.effect) {
+                Alpine.effect(() => {
+                    Alpine.store('cart')?.items;
+                    Alpine.store('cart')?.total;
+                });
+            }
+        }, 100);
+
+        console.log('تم تحديث واجهة السلة بنجاح');
+
+    } catch (error) {
+        console.error('خطأ في تحديث واجهة السلة:', error);
+    }
+}
+
         // عرض رسالة toast
+// عرض رسالة toast - مصححة
 function showToast(message, type = 'success') {
+    // إنشاء عنصر toast جديد
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.textContent = message;
-    toastContainer.appendChild(toast);
 
     // إضافة إمكانية الإغلاق عند الضغط
-    toast.addEventListener('click', () => {
-        toast.classList.remove('show');
-        setTimeout(() => toastContainer.removeChild(toast), 300);
+    toast.addEventListener('click', function() {
+        safelyRemoveToast(toast);
     });
 
+    // إضافة الـ toast إلى الحاوية
+    if (!toastContainer) {
+        // إنشاء حاوية جديدة إذا لم تكن موجودة
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    toastContainer.appendChild(toast);
+
+    // إظهار الـ toast
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
 
+    // إخفاء الـ toast تلقائياً بعد 5 ثوانٍ
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            if (toastContainer.contains(toast)) toastContainer.removeChild(toast);
-        }, 300);
-    }, 3000);
+        safelyRemoveToast(toast);
+    }, 5000);
+}
+
+// دالة آمنة لإزالة الـ toast
+function safelyRemoveToast(toast) {
+    if (!toast) return;
+
+    toast.classList.remove('show');
+
+    setTimeout(() => {
+        if (toast && toast.parentNode === toastContainer) {
+            toastContainer.removeChild(toast);
+        }
+    }, 300);
 }
 
 
@@ -915,6 +1104,9 @@ function showToast(message, type = 'success') {
                     this.total = 0;
                 }
             });
+             Alpine.store('app', {
+        processingOrder: false
+    });
         });
 
         // بيانات التطبيق الرئيسية
@@ -927,7 +1119,12 @@ function showToast(message, type = 'success') {
                 notificationsOpen: false,
                 profileOpen: false,
                 unreadNotifications: 3,
+                processingOrder: false,
 
+                 // أضف هذه الدالة
+        checkCartContents() {
+            checkCartContents();
+        },
                 // استخدام Alpine store أو fallback
                 get cartItems() {
                     return Alpine.store('cart')?.items || window.cartItems || [];

@@ -12,7 +12,9 @@ class CreateOrderProductTable extends Migration
     {
         Schema::create('order_product', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Order::class)->constrained();
+             $table->foreign('order_id')
+            ->references('id')->on('orders')
+            ->onDelete('cascade');  
             $table->foreignIdFor(Product::class)->constrained();
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('price');
