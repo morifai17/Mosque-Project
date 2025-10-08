@@ -260,13 +260,10 @@ public function updateOrderStatus(Request $request)
 
 public function getOrders(Request $request)
 {
-    $request->validate([
-        'student_id' => 'sometimes|exists:students,id',
-    ]);
-
     $query = Order::with([
-        'student:id,student_name',   // only id + student_name
-        'products:id,title'
+        'student:id,student_name',
+        'products:id,title',
+        'latestStatus'   // ✅ أضفنا العلاقة
     ]);
 
     if ($request->filled('student_id')) {
@@ -280,6 +277,7 @@ public function getOrders(Request $request)
         'data' => $orders
     ]);
 }
+
 
 
 }

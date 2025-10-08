@@ -42,11 +42,9 @@ Route::prefix('admin')->group(function () {
 
 Route::prefix('admin')->group(function () {
     Route::post('/addTeacher', [AdminDashboardController::class, 'addTeacher']);
-    Route::get('/teachers', [AdmindashboardController::class, 'getTeachers']);
-    Route::get('/quranCircles', [AdmindashboardController::class, 'getQuranCircles']);
-    Route::get('/pointsChanges', [AdmindashboardController::class, 'pointsChanges']);
-
-
+    Route::get('/teachers', [AdminDashboardController::class, 'getTeachers']);
+    Route::get('/quranCircles', [AdminDashboardController::class, 'getQuranCircles']);
+    Route::get('/pointsChanges', [AdminDashboardController::class, 'pointsChanges']);
 });
 
 

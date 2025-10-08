@@ -55,13 +55,13 @@ public function login(Request $request)
         'password' => 'nullable|required_without:fingerprint',
     ]);
 
-    // First, find the admin by phone number
+    // Find the admin by phone number
     $admin = Admin::where('phone_number', $request->phone_number)->first();
 
     if ($admin) {
-        // Check password if provided
+        // Check password normally (not hashed)
         if ($request->filled('password')) {
-            if (!Hash::check($request->password, $admin->password)) {
+            if ($request->password !== $admin->password) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Wrong password',

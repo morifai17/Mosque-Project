@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الطلبات (الأدمن)</title>
+    <title>إدارة الطلبات - مسجد الخانقية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -253,6 +253,15 @@
             font-weight: 500;
         }
 
+        .status-cancelled {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
         .stats-card {
             transition: all 0.3s ease;
         }
@@ -267,6 +276,35 @@
             border-radius: 0.75rem;
             padding: 1rem;
             margin-bottom: 1rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.hide {
+            transform: translateX(-100%);
+        }
+
+        .notification.success {
+            background-color: #10b981;
+        }
+
+        .notification.error {
+            background-color: #ef4444;
+        }
+
+        .notification.info {
+            background-color: #3b82f6;
         }
     </style>
 </head>
@@ -457,6 +495,10 @@
                     <i class="fas fa-truck ml-2"></i>
                     الطلبات المسلمة
                 </button>
+                <button onclick="filterOrders('cancelled')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-times ml-2"></i>
+                    الطلبات الملغاة
+                </button>
             </div>
 
             <!-- حقل البحث -->
@@ -511,7 +553,7 @@
             showLoading(true);
 
             try {
-                const res = await fetch("/api/order/myOrders", {
+                const res = await fetch("/api/order/getOrders", {
                     headers: { "Authorization": "Bearer " + token }
                 });
                 const data = await res.json();
@@ -519,15 +561,15 @@
                 const container = document.getElementById("ordersContainer");
                 container.innerHTML = "";
 
-                if (!data.success) {
+                if (data.status !== 'success') {
                     container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                        <i class="fas fa-exclamation-circle ml-2"></i> ${data.message}
+                        <i class="fas fa-exclamation-circle ml-2"></i> ${data.message || 'حدث خطأ أثناء تحميل الطلبات'}
                     </div>`;
                     showNoOrdersMessage();
                     return;
                 }
 
-                allOrders = data.orders;
+                allOrders = data.data;
                 filteredOrders = [...allOrders];
 
                 updateStatistics();
@@ -560,8 +602,9 @@
                 const div = document.createElement("div");
                 div.className = "order-card bg-white shadow rounded-lg p-5";
 
-                const statusClass = getStatusClass(order.status);
-                const statusText = getStatusText(order.status);
+                const status = order.latestStatus ? order.latestStatus.status : 'pending';
+                const statusClass = getStatusClass(status);
+                const statusText = getStatusText(status);
 
                 // معلومات الطالب من العلاقة مع جدول students
                 const student = order.student || {};
@@ -581,27 +624,23 @@
                                     <i class="fas fa-user-graduate ml-2"></i>
                                     معلومات الطالب
                                 </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <p class="text-gray-600 mb-1"><b>الاسم:</b> ${student.name || 'غير محدد'}</p>
-                                        <p class="text-gray-600"><b>البريد الإلكتروني:</b> ${student.email || 'غير محدد'}</p>
+                                        <p class="text-gray-600 mb-1"><b>اسم الطالب:</b> ${student.student_name || 'غير محدد'}</p>
+                                        <p class="text-gray-600"><b>رقم الطالب:</b> ${student.id || 'غير محدد'}</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600 mb-1"><b>رقم الهاتف:</b> ${student.phone || 'غير محدد'}</p>
-                                        <p class="text-gray-600"><b>العمر:</b> ${student.age || 'غير محدد'}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-600 mb-1"><b>المستوى:</b> ${student.level || 'غير محدد'}</p>
-                                        <p class="text-gray-600"><b>الجنس:</b> ${student.gender || 'غير محدد'}</p>
+                                        <p class="text-gray-600 mb-1"><b>رقم الطلب:</b> ${order.id}</p>
+                                        <p class="text-gray-600"><b>تاريخ الطلب:</b> ${formatDate(order.created_at)}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <p class="text-gray-600 mb-1"><b>السعر الكلي:</b> ${order.total_price} ر.س</p>
-                                    <p class="text-gray-600 mb-1"><b>السعر بعد الخصم:</b> ${order.final_price} ر.س</p>
-                                    <p class="text-gray-600"><b>طريقة الدفع:</b> ${order.payment_method || 'غير محدد'}</p>
+                                    <p class="text-gray-600 mb-1"><b>السعر الكلي:</b> ${order.total_price} نقطة</p>
+                                    <p class="text-gray-600 mb-1"><b>السعر بعد الخصم:</b> ${order.final_price} نقطة</p>
+                                    <p class="text-gray-600"><b>حالة الطلب:</b> ${statusText}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-600 mb-1"><b>الكوبون:</b> ${order.coupon ? order.coupon.code : 'لا يوجد'}</p>
@@ -612,39 +651,42 @@
                             <div class="mb-4">
                                 <p class="font-medium text-gray-700 mb-2"><i class="fas fa-boxes ml-2"></i> المنتجات:</p>
                                 <ul class="bg-gray-50 rounded-lg p-3">
-                                    ${order.products.map(p => `
+                                    ${order.products ? order.products.map(product => `
                                         <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                             <div>
-                                                <span class="font-medium">${p.name}</span>
-                                                <span class="text-sm text-gray-500"> × ${p.quantity}</span>
+                                                <span class="font-medium">${product.title || 'منتج غير محدد'}</span>
+                                                <span class="text-sm text-gray-500"> × ${product.pivot ? product.pivot.quantity : 1}</span>
                                             </div>
-                                            <span class="font-medium">${p.subtotal} ر.س</span>
+                                            <span class="font-medium">${product.pivot ? (product.pivot.price * product.pivot.quantity) + ' نقطة' : 'غير محدد'}</span>
                                         </li>
-                                    `).join("")}
+                                    `).join("") : '<li class="text-gray-500">لا توجد منتجات</li>'}
                                 </ul>
                             </div>
                         </div>
 
                         <!-- ✅ أزرار تغيير الحالة -->
                         <div class="flex flex-col gap-2 md:w-48">
-                            <button onclick="updateOrderStatus(${order.id}, 'accepted')"
-                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center ${order.status === 'accepted' || order.status === 'delivered' ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${order.status === 'accepted' || order.status === 'delivered' ? 'disabled' : ''}>
-                                <i class="fas fa-check ml-2"></i>
-                                قبول الطلب
-                            </button>
-                            <button onclick="updateOrderStatus(${order.id}, 'rejected')"
-                                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center ${order.status === 'rejected' || order.status === 'delivered' ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${order.status === 'rejected' || order.status === 'delivered' ? 'disabled' : ''}>
-                                <i class="fas fa-times ml-2"></i>
-                                رفض الطلب
-                            </button>
-                            <button onclick="updateOrderStatus(${order.id}, 'delivered')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center ${order.status === 'delivered' || order.status === 'rejected' ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${order.status === 'delivered' || order.status === 'rejected' ? 'disabled' : ''}>
-                                <i class="fas fa-truck ml-2"></i>
-                                تم التسليم
-                            </button>
+                            ${status === 'pending' ? `
+                                <button onclick="updateOrderStatus(${order.id}, 'accepted')"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check ml-2"></i>
+                                    قبول الطلب
+                                </button>
+                                <button onclick="updateOrderStatus(${order.id}, 'rejected')"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-times ml-2"></i>
+                                    رفض الطلب
+                                </button>
+                            ` : ''}
+
+                            ${status === 'accepted' ? `
+                                <button onclick="updateOrderStatus(${order.id}, 'delivered')"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-truck ml-2"></i>
+                                    تم التسليم
+                                </button>
+                            ` : ''}
+
                             <button onclick="viewOrderDetails(${order.id})"
                                     class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-eye ml-2"></i>
@@ -692,7 +734,10 @@
             if (status === 'all') {
                 filteredOrders = [...allOrders];
             } else {
-                filteredOrders = allOrders.filter(order => order.status === status);
+                filteredOrders = allOrders.filter(order => {
+                    const orderStatus = order.latestStatus ? order.latestStatus.status : 'pending';
+                    return orderStatus === status;
+                });
             }
             displayOrders(filteredOrders);
         }
@@ -708,7 +753,7 @@
                 } else {
                     filteredOrders = allOrders.filter(order =>
                         order.id.toString().includes(searchTerm) ||
-                        (order.student && order.student.name && order.student.name.toLowerCase().includes(searchTerm))
+                        (order.student && order.student.student_name && order.student.student_name.toLowerCase().includes(searchTerm))
                     );
                 }
 
@@ -719,16 +764,25 @@
         // ✅ تحديث الإحصائيات
         function updateStatistics() {
             const totalOrders = allOrders.length;
-            const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
-            const completedOrders = allOrders.filter(order => order.status === 'delivered').length;
+            const pendingOrders = allOrders.filter(order => {
+                const status = order.latestStatus ? order.latestStatus.status : 'pending';
+                return status === 'pending';
+            }).length;
+            const completedOrders = allOrders.filter(order => {
+                const status = order.latestStatus ? order.latestStatus.status : 'pending';
+                return status === 'delivered';
+            }).length;
             const totalRevenue = allOrders
-                .filter(order => order.status === 'delivered')
+                .filter(order => {
+                    const status = order.latestStatus ? order.latestStatus.status : 'pending';
+                    return status === 'delivered';
+                })
                 .reduce((sum, order) => sum + parseFloat(order.final_price || 0), 0);
 
             document.getElementById('totalOrders').textContent = totalOrders;
             document.getElementById('pendingOrders').textContent = pendingOrders;
             document.getElementById('completedOrders').textContent = completedOrders;
-            document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2) + ' ر.س';
+            document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(0) + ' نقطة';
         }
 
         // ✅ الحصول على كلاس الحالة
@@ -738,6 +792,7 @@
                 case 'accepted': return 'status-accepted';
                 case 'rejected': return 'status-rejected';
                 case 'delivered': return 'status-delivered';
+                case 'cancelled': return 'status-cancelled';
                 default: return 'status-pending';
             }
         }
@@ -749,6 +804,7 @@
                 case 'accepted': return 'مقبول';
                 case 'rejected': return 'مرفوض';
                 case 'delivered': return 'تم التسليم';
+                case 'cancelled': return 'ملغى';
                 default: return 'قيد الانتظار';
             }
         }
@@ -789,11 +845,7 @@
         function showNotification(message, type = 'info') {
             // إنشاء عنصر الإشعار
             const notification = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' :
-                           type === 'error' ? 'bg-red-500' :
-                           'bg-blue-500';
-
-            notification.className = `fixed top-4 left-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-0`;
+            notification.className = `notification ${type}`;
             notification.innerHTML = `
                 <div class="flex items-center">
                     <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} ml-2"></i>
@@ -805,9 +857,11 @@
 
             // إخفاء الإشعار بعد 3 ثوانٍ
             setTimeout(() => {
-                notification.classList.add('translate-x-full');
+                notification.classList.add('hide');
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
             }, 3000);
         }

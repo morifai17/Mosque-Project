@@ -5,6 +5,7 @@ use App\Models\TeacherList;
 use App\Models\QuranCircle;
 use Illuminate\Http\Request;
 use App\Models\StudentPoint;
+use App\Models\Teacher;
 
 class AdminDashboardController extends Controller
 {
@@ -40,7 +41,7 @@ class AdminDashboardController extends Controller
     ], 201);
 }
 
-public function getTeachers(Request $request) 
+public function getTeachers(Request $request)
 {
     // ✅ إذا بعت id → رجّع معلّم واحد فقط
     if ($request->has('id')) {
@@ -64,7 +65,7 @@ public function getTeachers(Request $request)
         $query->where(function ($q) use ($searchTerm) {
             $q->where('first_name', 'LIKE', "%{$searchTerm}%")
               ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
-              ->orWhere('phone_number', 'LIKE', "%{$searchTerm}%"); 
+              ->orWhere('phone_number', 'LIKE', "%{$searchTerm}%");
         });
     }
 
@@ -99,8 +100,8 @@ public function getQuranCircles()
             'id' => $circle->id,
             'title' => $circle->title,
             'teacher_id' => $circle->teacher_id,
-            'teacher_name' => $circle->teacher 
-                ? $circle->teacher->first_name . ' ' . $circle->teacher->last_name 
+            'teacher_name' => $circle->teacher
+                ? $circle->teacher->first_name . ' ' . $circle->teacher->last_name
                 : null,
             'created_at' => $circle->created_at,
             'updated_at' => $circle->updated_at,

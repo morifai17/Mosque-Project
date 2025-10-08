@@ -247,64 +247,114 @@
                         <i class="fas text-lg" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
                     </button>
 
-                    <!-- زر السلة -->
-                    <div class="relative ml-3" @click="cartOpen = !cartOpen">
-                        <button class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-golden-400 transition">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span x-show="cartItems.length > 0" class="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" x-text="cartItems.length"></span>
-                        </button>
-
-                        <!-- قائمة السلة -->
-                        <div x-show="cartOpen" @click.outside="cartOpen = false" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-50">
-                            <div class="p-3 border-b dark:border-gray-700 bg-primary-500 text-white">
-                                <h3 class="font-semibold">سلة التسوق</h3>
-                            </div>
-                            <div class="max-h-60 overflow-y-auto">
-                                <template x-for="item in cartItems" :key="item.product_id">
-                                    <div class="flex items-center px-4 py-3 border-b dark:border-gray-700">
-                                        <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="item.product_name"></p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                <span x-text="item.quantity"></span> × <span x-text="formatPrice(item.unit_price)"></span>
-                                            </p>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="text-sm font-bold text-primary-600 dark:text-golden-400" x-text="formatPrice(item.total_item_price)"></span>
-                                            <button @click="removeFromCart(item.product_id, 1)" class="text-red-500 hover:text-red-700 ml-2">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-                                <div x-show="cartItems.length === 0" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
-                                    السلة فارغة
-                                </div>
-                            <!-- في قائمة السلة، قبل المجموع -->
-<div class="px-4 py-2 border-b dark:border-gray-700">
-    <div class="flex justify-between items-center">
-        <span class="text-sm text-gray-600 dark:text-gray-300">رصيد النقاط:</span>
-        <span class="text-sm font-bold text-green-600 dark:text-green-400" x-text="formatPrice(studentPoints)"></span>
-    </div>
-</div>
-                            </div>
-                            <div class="p-3 border-t dark:border-gray-700">
-                                <div class="flex justify-between mb-2">
-                                    <span class="font-semibold">المجموع:</span>
-                                    <span class="font-bold text-primary-600 dark:text-golden-400" x-text="formatPrice(cartTotal)"></span>
-                                </div>
-                           <button
-        class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="cartItems.length === 0"
-        @click="completeOrder()">
-        <span x-show="!processingOrder">اتمام الطلب</span>
-        <span x-show="processingOrder" class="flex items-center justify-center">
-            <i class="fas fa-spinner fa-spin ml-2"></i>
-            جاري المعالجة...
+                  <!-- زر السلة -->
+<div class="relative ml-3" x-data="{ cartOpen: false, couponCode: '', applyingCoupon: false }">
+    <button
+        @click="cartOpen = !cartOpen"
+        class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-golden-400 transition relative">
+        <i class="fas fa-shopping-cart"></i>
+        <span
+            x-show="cartItems.length > 0"
+            class="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
+            x-text="cartItems.length">
         </span>
     </button>
-                            </div>
-                        </div>
+
+    <!-- قائمة السلة -->
+    <div
+        x-show="cartOpen"
+        @click.outside="cartOpen = false"
+        x-transition
+        class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+    >
+        <!-- رأس القائمة -->
+        <div class="p-3 bg-primary-600 text-white flex justify-between items-center">
+            <h3 class="font-semibold">🛒 سلة التسوق</h3>
+            <button @click="cartOpen = false" class="text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- محتوى السلة -->
+        <div class="max-h-60 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
+            <template x-for="item in cartItems" :key="item.product_id">
+                <div class="flex items-center px-4 py-3">
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white" x-text="item.product_name"></p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            <span x-text="item.quantity"></span> × <span x-text="formatPrice(item.unit_price)"></span>
+                        </p>
                     </div>
+                    <div class="flex items-center">
+                        <span class="text-sm font-bold text-primary-600 dark:text-golden-400" x-text="formatPrice(item.total_item_price)"></span>
+                        <button
+                            @click="removeFromCart(item.product_id, 1)"
+                            class="text-red-500 hover:text-red-700 ml-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- فارغة -->
+            <div x-show="cartItems.length === 0" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                السلة فارغة
+            </div>
+        </div>
+
+        <!-- الكوبون -->
+        <div class="p-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <label for="couponCode" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                🎁 كود الخصم (اختياري)
+            </label>
+            <div class="flex space-x-2 rtl:space-x-reverse">
+                <input
+                    id="couponCode"
+                    type="text"
+                    x-model="couponCode"
+                    placeholder="أدخل كود الخصم"
+                    class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                />
+                <button
+                    @click="applyCoupon()"
+                    :disabled="applyingCoupon"
+                    class="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!applyingCoupon">تطبيق</span>
+                    <span x-show="applyingCoupon" class="flex items-center gap-1">
+                        <i class="fas fa-spinner fa-spin"></i> جاري...
+                    </span>
+                </button>
+            </div>
+            <p id="couponMessage" class="mt-2 text-xs text-gray-500 dark:text-gray-400"></p>
+        </div>
+
+        <!-- رصيد النقاط والمجموع -->
+        <div class="p-3 border-t dark:border-gray-700 space-y-1">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-300">رصيد النقاط:</span>
+                <span class="font-semibold text-green-600 dark:text-green-400" x-text="formatPrice(studentPoints)"></span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-300">المجموع:</span>
+                <span class="font-semibold text-primary-600 dark:text-golden-400" x-text="formatPrice(cartTotal)"></span>
+            </div>
+        </div>
+
+        <!-- زر الإتمام -->
+        <div class="p-3 border-t dark:border-gray-700">
+            <button
+                class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="cartItems.length === 0 || processingOrder"
+                @click="completeOrder(couponCode)">
+                <span x-show="!processingOrder">اتمام الطلب</span>
+                <span x-show="processingOrder" class="flex items-center justify-center gap-2">
+                    <i class="fas fa-spinner fa-spin"></i> جاري المعالجة...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
 
                     <!-- الإشعارات -->
                     <div class="relative ml-3" @click="notificationsOpen = !notificationsOpen">
@@ -583,88 +633,36 @@ async function fetchCart() {
    // إتمام الطلب - مع معالجة نقص النقاط
 
 async function completeOrder() {
-    const token = getAuthToken();
-    if (!token) return;
+  const couponCode = document.getElementById('couponCode')?.value?.trim() || null;
 
-    try {
-        // أولاً، نجلب أحدث بيانات السلة والنقاط
-        await fetchCart();
+  try {
+    const response = await fetch('/api/order/save', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + getAuthToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        coupon_code: couponCode
+      })
+    });
 
-        // ننتظر قليلاً لضمان تحديث البيانات
-        setTimeout(async () => {
-            console.log('محتويات السلة:', window.cartItems);
-            console.log('إجمالي الطلب:', window.cartTotal);
+    const data = await response.json();
 
-            if (window.cartItems.length === 0) {
-                showToast('السلة فارغة، أضف منتجات أولاً', 'warning');
-                return;
-            }
-
-            // نجلب رصيد النقاط الحالي للطالب
-            const points = await getStudentPoints();
-            console.log('رصيد النقاط الحالي:', points);
-            console.log('إجمالي الطلب المطلوب:', window.cartTotal);
-
-            if (points < window.cartTotal) {
-                const missingPoints = window.cartTotal - points;
-                showToast(`نقاطك غير كافية! تحتاج ${missingPoints} نقطة إضافية`, 'error');
-
-                // عرض خيارات للمستخدم
-                setTimeout(() => {
-                    if (confirm(`رصيدك: ${points} نقطة\nإجمالي الطلب: ${window.cartTotal} نقطة\n\nهل تريد:\n1- إزالة بعض المنتجات\n2- شحن النقاط\n3- الإلغاء`)) {
-                        // يمكن توجيه المستخدم لصفحة شحن النقاط
-                        window.location.href = '/wallet';
-                    }
-                }, 1000);
-                return;
-            }
-
-            showToast('جاري معالجة الطلب...', 'warning');
-
-            const response = await fetch(ORDER_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    coupon_code: null
-                })
-            });
-
-            const data = await response.json();
-            console.log('استجابة الطلب:', data);
-
-            if (!response.ok) {
-                throw new Error(data.message || 'فشل في إتمام الطلب');
-            }
-
-            if (data.success) {
-                showToast(`تم إنشاء الطلب بنجاح! رقم الطلب: #${data.order_id}`, 'success');
-
-                // تحديث واجهة المستخدم بعد نجاح الطلب
-                updateCartUI([], 0);
-                window.cartOpen = false;
-
-                // إعادة تحميل السلة والتحديث
-                setTimeout(() => {
-                    fetchCart();
-                    // يمكن إعادة تحميل الصفحة لتحديث البيانات بالكامل
-                    // window.location.reload();
-                }, 2000);
-
-            } else {
-                throw new Error(data.message || 'فشل في إتمام الطلب');
-            }
-        }, 500);
-
-    } catch (error) {
-        console.error('خطأ في إتمام الطلب:', error);
-        showToast(`خطأ: ${error.message}`, 'error');
+    if (data.success) {
+      showToast('✅ تم تنفيذ الطلب بنجاح');
+      // يمكنك تحديث الواجهة أو تفريغ السلة بعد النجاح
+      fetchCart();
+    } else {
+      showToast('❌ ' + (data.message || 'فشل تنفيذ الطلب'));
     }
+
+  } catch (error) {
+    console.error('Error completing order:', error);
+    showToast('❌ حدث خطأ أثناء تنفيذ الطلب');
+  }
 }
+
 
 // دالة لجلب رصيد النقاط
 async function getStudentPoints() {
